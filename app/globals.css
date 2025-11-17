@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
 }
 
 @theme inline {
@@ -12,6 +12,8 @@
   --font-mono: var(--font-geist-mono);
   --font-lime: var(--font-lime);
   --font-bokor: var(--font-bokor);
+  --font-ballet: var(--font-ballet);
+  --font-diplomata: var(--font-diplomata);
 }
 
 @media (prefers-color-scheme: dark) {

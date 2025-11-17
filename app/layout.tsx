@@ -1,27 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Limelight, Bokor } from "next/font/google";
+import {
+  limelight,
+  ballet,
+  geistMono,
+  geistSans,
+  bokor,
+  diplomata,
+} from "@/ui/fonts";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-const bokor = Bokor({
-  variable: "--font-bokor",
-  weight: "400",
-
-  subsets: ["latin"],
-});
-const limelight = Limelight({
-  variable: "--font-lime",
-  weight: "400",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Barber",
@@ -36,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${limelight.variable} ${bokor.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${limelight.variable} ${ballet.variable} ${geistMono.variable} ${diplomata.variable} ${bokor.variable} antialiased`}
       >
         {children}
       </body>
