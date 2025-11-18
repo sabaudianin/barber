@@ -10,10 +10,11 @@ import {
   slideInRight,
   slideInLeft,
 } from "@/lib/motion";
+import { VisitButton } from "@/elements/visitButton/VisitButton";
 
 export const Hero = () => {
   return (
-    <section className="relative grid grid-cols-1 md:grid-cols-[1fr_1fr] place-items-center min-h-[500px]">
+    <section className="relative grid grid-cols-1 md:grid-cols-[1fr_1fr] place-items-center p-2 min-h-[500px]">
       <div className="absolute inset-0 ">
         <Image
           src="/images/poster.jpg"
@@ -57,13 +58,7 @@ export const Hero = () => {
           Klasyczne strzyżenia, trymowanie brody, hot towel shave i klimat, dla
           którego chce się wracać.
         </motion.h3>
-        <motion.button
-          variants={fadeInScaleUp}
-          onClick={() => console.log("CLICK")}
-          className="font-mono rounded py-2 px-4 bg-amber-400/60 font-semibold shadow-lg shadow-amber-400/30"
-        >
-          Umów wizytę
-        </motion.button>
+        <VisitButton />
       </motion.div>
     </section>
   );
