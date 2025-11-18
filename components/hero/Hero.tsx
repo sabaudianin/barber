@@ -6,7 +6,6 @@ import {
   staggerContainer,
   slideInRightScale,
   slideInLeftScale,
-  fadeInScaleUp,
   slideInRight,
   slideInLeft,
 } from "@/lib/motion";
@@ -53,7 +52,7 @@ export const Hero = () => {
         </motion.h2>
         <motion.h3
           variants={slideInLeftScale}
-          className="font-ballet tracking-[.2em]"
+          className="font-ballet tracking-[.2em] text-xl"
         >
           Klasyczne strzyżenia, trymowanie brody, hot towel shave i klimat, dla
           którego chce się wracać.

@@ -6,12 +6,23 @@
   --background: #ffffff;
   --foreground: #1a1a1a;
   --color-accent: #9c7202;
+  --accent-light: #ffd230;
 }
 
 body::-webkit-scrollbar {
   display: none;
   scrollbar-width: none; /* ukrywa scrollbar */
   -ms-overflow-style: none; /* IE i stary Edge */
+}
+
+@theme {
+  --max-w-hd: 1920px;
+}
+
+@layer utilities {
+  .max-w-hd {
+    max-width: var(--max-w-hd);
+  }
 }
 
 @theme inline {

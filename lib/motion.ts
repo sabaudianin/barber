@@ -17,6 +17,22 @@ export const fadeInScaleUp: Variants = {
     },
   },
 };
+export const longFadeInScaleUp: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    scale: 0.12,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 2.2,
+      ease: easeInOut,
+    },
+  },
+};
 
 // 2) Najazd z lewej + rośnięcie do normalnej skali
 export const slideInLeftScale: Variants = {
