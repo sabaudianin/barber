@@ -6,7 +6,7 @@ import {
   geistSans,
   bokor,
   diplomata,
-} from "@/ui/fonts";
+} from "@/lib/fonts";
 import "../styles/globals.css";
 
 import { Navbar } from "@/components/navbar/Navbar";

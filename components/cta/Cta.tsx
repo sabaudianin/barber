@@ -86,20 +86,6 @@ export const Cta = () => {
             Klasyczne strzyżenia
           </motion.h3>
         </motion.div>
-
-        <motion.div
-          variants={slideInRightScale}
-          className="justify-self-start w-full max-w-md rounded col-span-1 md:col-span-6 p-12 "
-        >
-          <motion.h3
-            variants={slideInLeftScale}
-            className=" font-mono tracking-[.2em] text-xl z-50 "
-          >
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Iusto ad
-            blanditiis, quae quibusdam doloribus voluptates optio similique
-            voluptatum praesentium soluta.
-          </motion.h3>
-        </motion.div>
       </motion.div>
     </section>
   );
