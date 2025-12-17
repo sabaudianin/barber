@@ -28,10 +28,7 @@ body::-webkit-scrollbar {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   --font-lime: var(--font-lime);
-  --font-bokor: var(--font-bokor);
   --font-ballet: var(--font-ballet);
   --font-diplomata: var(--font-diplomata);
 }

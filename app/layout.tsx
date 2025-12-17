@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import {
-  limelight,
-  ballet,
-  geistMono,
-  geistSans,
-  bokor,
-  diplomata,
-} from "@/lib/fonts";
+import { limelight, ballet, diplomata } from "@/lib/fonts";
 import "../styles/globals.css";
 
 import { Navbar } from "@/components/navbar/Navbar";
@@ -24,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${limelight.variable} ${ballet.variable} ${geistMono.variable} ${diplomata.variable} ${bokor.variable} antialiased`}
+        className={` ${limelight.variable} ${ballet.variable}  ${diplomata.variable} antialiased`}
       >
         <Navbar />
         {children}

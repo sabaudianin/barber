@@ -5,18 +5,10 @@ export const AboutUs = () => {
   return (
     <section className="p-2 bg-stone-700">
       <div>
-        <h2 className="font-bokor py-2 text-xl text-center">
-          Welcome to Barber House Saska Kępa, a modern barbershop rooted in the
-          classic craft of men&apos;s grooming.
+        <h2 className="font-diplomata py-2">
+          Witamy w Barber Shop Saska Kępa - nowoczesnym barbershopie
+          zakorzenionym w klasycznym rzemiośle męskiej pielęgnacji.
         </h2>
-        <p className="font-bokor py-2 indent-2 text-zinc-400 text-lg">
-          Located in the heart of Warsaw&apos;s artistic Saska Kępa district, we
-          blend skilled craftsmanship, a relaxed atmosphere, and a passion for
-          precision. We specialize in clean fades, sharp cuts, and tailored
-          beard work, combining traditional techniques with today;&apos;s
-          trends.
-        </p>
-
         <div className=" p-2 w-1/2 mx-auto  sepia">
           <Image
             src="/images/vintage.png"
@@ -26,32 +18,41 @@ export const AboutUs = () => {
             className=" mx-auto sepia"
           />
         </div>
+
+        <p className="font-lime py-2 indent-2">
+          Zlokalizowani w sercu artystycznej warszawskiej Saskiej Kępy, łączymy
+          mistrzowskie rzemiosło, swobodną atmosferę i pasję do precyzji.
+          Specjalizujemy się w czystych fade&apos;ach, wyrazistych cięciach oraz
+          indywidualnie dopasowanej stylizacji brody, łącząc tradycyjne techniki
+          z nowoczesnymi trendami.
+        </p>
+
         <article className="grid lg:grid-cols-2 lg:items-stretch">
           <ul className="p-2 list-inside  space-y-1 tracking-[0.25em] bg-stone-800 lg:h-full flex flex-col font-mono text-xs text-zinc-300 mt-auto">
             <h2 className="py-2 text-center font-lime text-xl text-white">
-              Why Choose Us?
+              Dlaczego My?
             </h2>
             <li className="font-sans">
-              <span className="text-xl">💈</span>Skilled barbers with a passion
-              for the craft
+              <span className="text-xl">💈</span>Doświadczeni barberzy z pasją
+              do swojego fachu
             </li>
             <li className="font-mono">
-              <span className="text-xl">💈</span>Expert beard shaping and
-              grooming rituals
+              <span className="text-xl">💈</span>Profesjonalne modelowanie brody
+              i rytuały pielęgnacyjne
             </li>
             <li className="">
               {" "}
-              <span className="text-xl">💈</span>Complimentary coffee and a
-              relaxed vibe
+              <span className="text-xl">💈</span>Darmowa kawa i luźna,
+              relaksująca atmosfera
             </li>
             <li className="">
               {" "}
-              <span className="text-xl">💈</span>Authentic Saska Kępa atmosphere
+              <span className="text-xl">💈</span>Autentyczny klimat Saskiej Kępy
             </li>
             <li className="">
               {" "}
-              <span className="text-xl">💈</span>No rush - quality and detail
-              first
+              <span className="text-xl">💈</span>Bez pośpiechu - jakość i
+              dbałość o detale na pierwszym miejscu
             </li>
           </ul>
           <div className="relative h-80 p-2 lg:h-full">

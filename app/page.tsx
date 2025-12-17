@@ -5,7 +5,7 @@ import { Cta } from "@/components/cta/Cta";
 
 export default function Home() {
   return (
-    <section className="grid min-h-screen  mx-auto  bg-zinc-50 font-sans dark:bg-black">
+    <section className="grid min-h-screen bg-zinc-50 font-sans dark:bg-black">
       <Hero />
       <Cta />
       <AboutUs />
