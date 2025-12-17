@@ -112,3 +112,14 @@ export const staggerContainer: Variants = {
     },
   },
 };
+
+//lista stagger
+export const listItemPop: Variants = {
+  hidden: { opacity: 0, x: -18, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: { duration: 0.45, ease: easeOut },
+  },
+};

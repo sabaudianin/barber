@@ -5,15 +5,13 @@ import {
   staggerContainer,
   slideInRightScale,
   slideInLeftScale,
-  fadeInScaleUp,
-  slideInRight,
   longFadeInScaleUp,
   slideInLeft,
 } from "@/lib/motion";
 
 export const Cta = () => {
   return (
-    <section className="p-4  max-w-hd  mx-auto">
+    <section className="p-4 max-w-hd mx-auto shadow-sm  my-4">
       <motion.div
         variants={staggerContainer}
         initial="hidden"

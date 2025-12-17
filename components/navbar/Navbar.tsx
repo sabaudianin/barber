@@ -63,9 +63,9 @@ export const Navbar = () => {
         </div>
 
         <nav
-          className={`hidden md:flex gap-8 font-semibold uppercase tracking-[0.05em] text-zinc-300 font-lime  `}
+          className={`hidden md:block font-semibold uppercase tracking-[0.05em] text-zinc-300 font-lime  `}
         >
-          <ul>
+          <ul className="flex gap-8">
             {navLinks.map((link) => {
               const active = isLinkActive(link.url, pathname);
               return (
