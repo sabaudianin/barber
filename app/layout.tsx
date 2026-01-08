@@ -3,6 +3,7 @@ import { limelight, ballet, diplomata } from "@/lib/fonts";
 import "../styles/globals.css";
 
 import { Navbar } from "@/components/navbar/Navbar";
+import { Footer } from "@/components/footer/Footer";
 
 export const metadata: Metadata = {
   title: "Barber",
@@ -21,6 +22,7 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );
