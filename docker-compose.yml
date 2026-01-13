@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: barber_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barber
+      POSTGRES_PASSWORD: barberpass
+      POSTGRES_DB: barber
+    ports:
+      - "5432:5432"
+    volumes:
+      - barber_pgdata:/var/lib/postgresql/data
+
+volumes:
+  barber_pgdata:

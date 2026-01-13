@@ -39,7 +39,7 @@ export const Footer = () => {
           <div className="flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
             <p className="font-diplomata text-base">Pytania:</p>
 
-            <FaWhatsapp className="text-4xl text-green-500" />
+            <FaWhatsapp className="text-4xl text-green-500 " />
 
             <p className="text-neutral-300">
               Dodaj nas na WhatsAppie lub po prostu zadzwoń
