@@ -24,7 +24,7 @@ async function main() {
   await prisma.service.createMany({
     data: [
       { name: "Strzyżenie", durationMinutes: 30, price: 50 },
-      { name: "Strzyżenie + broda", durationMinutes: 45, price: 70 },
+      { name: "Combo - Strzyżenie + broda", durationMinutes: 45, price: 70 },
       { name: "Sama broda", durationMinutes: 20, price: 30 },
       { name: "Full pakiet", durationMinutes: 60, price: 100 },
     ],

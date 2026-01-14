@@ -9,4 +9,12 @@ if (!connectionString) {
 
 const adapter = new PrismaPg({ connectionString });
 
-export const prisma = new PrismaClient({ adapter });
+//w next dev moduły mogą sie przeladowywac -singelton chroni przed mnozeniem polaczen do db,Dlatego robimy jeden klient i trzymamy go w globalThis.tak by robil sie w kazdym roucie new PrismaClient()
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
