@@ -70,4 +70,62 @@ export async function POST(req: Request) {
     );
   }
   const end = start.plus({ minutes: service.durationMinutes });
+
+  //main logic check and create
+
+  try {
+    const created = await prisma.$transaction(async (tx) => {
+      const conflict = await tx.booking.findFirst({
+        where: {
+          barberId,
+          status: "BOOKED",
+          startAt: { lt: end.toJSDate() },
+          endAt: { gt: start.toJSDate() },
+        },
+        select: { id: true },
+      });
+      //throw error controlled, if conflict
+      if (conflict) {
+        throw new Error("BOOKING_CONFLICT");
+      }
+
+      return tx.booking.create({
+        data: {
+          barberId,
+          serviceId,
+          customerName,
+          customerPhone,
+          startAt: start.toJSDate(),
+          endAt: end.toJSDate(),
+          status: "BOOKED",
+        },
+        select: {
+          id: true,
+          startAt: true,
+          endAt: true,
+          status: true,
+          barber: { select: { id: true, name: true } },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              durationMinutes: true,
+              price: true,
+            },
+          },
+        },
+      });
+    });
+
+    return NextResponse.json(created, { status: 201 });
+  } catch (e: unknown) {
+    if (e instanceof Error && e?.message === "BOOKING_CONFLICT") {
+      return NextResponse.json(
+        { error: "Selected time is no longer availible" },
+        { status: 409 }
+      );
+    }
+    console.error(e);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }
