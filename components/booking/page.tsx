@@ -58,6 +58,7 @@ export default function BookingPage() {
   }, []);
 
   //zamian paramterów barbera, service , day - pobieranie wolnych slotów
+
   useEffect(() => {
     async function loadSlots() {
       if (!selectedBarberId || !selectedServiceId || !selectedDay) return;
@@ -78,16 +79,38 @@ export default function BookingPage() {
 
   //jesli zminie barbera usługe reset dnia i slotów zeby nie pokazywać starych już nie aktualnych
 
-  function onChangeBarber(id: string) {
+  const onChangeBarber = (id: string) => {
     setSelectedBarberId(id);
     setSelectedDay(undefined);
     setSlots([]);
-  }
-  function onChangeService(id: string) {
+  };
+  const onChangeService = (id: string) => {
     setSelectedServiceId(id);
     setSelectedDay(undefined);
     setSlots([]);
-  }
+  };
+
+  const renderSlots = () => {
+    if (!selectedDay) return <p>Wybierz dzień z kalendarza</p>;
+    if (loadingSlots) return <p>...Ładowanie ...</p>;
+    if (slots.length === 0) return <p>Brak wolnych terminów</p>;
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {slots.map((slot) => (
+          <button
+            key={slot}
+            className="border p-3 rounded-2xl border-amber-500"
+            onClick={() =>
+              console.log(`Wybrano ${toISODate(selectedDay)} ${slot}`)
+            }
+          >
+            {slot}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <section className="mx-auto max-w-6xl py-4">
@@ -181,34 +204,7 @@ export default function BookingPage() {
           />
         </div>
 
-        <div>
-          <div>
-            <p className="text-center font-bold py-2 text-amber-300">
-              Wolne godziny:
-            </p>
-            {!selectedDay ? (
-              <p>Wybierz dzień z kalendarza</p>
-            ) : loadingSlots ? (
-              <p>...Ładowanie ...</p>
-            ) : slots.length === 0 ? (
-              <p>Brak wolnych terminów</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {slots.map((slot) => (
-                  <button
-                    key={slot}
-                    className="border p-3 rounded-2xl border-amber-500"
-                    onClick={() =>
-                      console.log(`Wybrano ${toISODate(selectedDay)} ${slot}`)
-                    }
-                  >
-                    {slot}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <div>{renderSlots()}</div>
       </section>
     </section>
   );
