@@ -23,7 +23,7 @@ export function Calendar() {
         }
         classNames={{
           today: `font-extrabold text-amber-100 border-amber-900 border-2 rounded-4xl`,
-          selected: `bg-amber-500 border-amber-500 text-white rounded-3xl`, // Highlight the selected day
+          selected: `bg-amber-500 border-amber-500 text-white rounded-3xl`,
 
           chevron: " fill-amber-900",
           footer: "text-amber-300 font-extrabold",
