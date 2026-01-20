@@ -130,8 +130,12 @@ export async function GET(req: Request) {
       }
       cursor = cursor.plus({ minutes: STEP_MINUTES });
     }
+    const iso = day.toISODate();
+    if (!iso) {
+      throw new Error("Invalid date while building month availibility");
+    }
     if (hasAny) {
-      availibleDates.push(day.toISODate());
+      availibleDates.push(iso);
     }
   }
 

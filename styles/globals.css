@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./animations.css";
 @import "./custom.css";
+@import "react-day-picker/style.css";
 
 :root {
   --background: #ffffff;
