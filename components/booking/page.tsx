@@ -7,6 +7,7 @@ import { pl } from "react-day-picker/locale";
 import { useQuery } from "@tanstack/react-query";
 
 type Barber = { id: string; name: string };
+
 type Service = {
   id: string;
   name: string;
@@ -75,6 +76,34 @@ export default function BookingPage() {
 
   const barbers = barbersQuery.data ?? [];
   const services = servicesQuery.data ?? [];
+
+  const effectiveBarberId = selectedBarberId || barbers[0]?.id || "";
+  const effectiveServiceId = selectedServiceId || services[0]?.id || "";
+
+  const availabilityMonthQuery = useQuery({
+    queryKey: [
+      "availabilityMonth",
+      effectiveBarberId,
+      effectiveServiceId,
+      toMonthString(month),
+    ],
+    enabled: !!effectiveBarberId && !!effectiveServiceId,
+    queryFn: async () => {
+      const msc = toMonthString(month);
+      const url = `/api/availability/month?barberId=${encodeURIComponent(
+        effectiveBarberId,
+      )}&serviceId=${encodeURIComponent(effectiveServiceId)}&month=${msc}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error("Failed to fetch month availability");
+      }
+      return (await res.json()) as { availableDates: string[] };
+    },
+  });
+
+  const availableDatesSet = useMemo(() => {
+    return new Set<string>(availabilityMonthQuery.data?.availableDates ?? []);
+  }, [availabilityMonthQuery.data]);
 
   //pobieranie dostępnych dni miesiąca
   useEffect(() => {
@@ -187,11 +216,13 @@ export default function BookingPage() {
   //kropeczka dostępności use memo bo przekazujemy ddalej
   const modifiers = useMemo(() => {
     return {
-      available: (date: Date) => availableDates.has(toISODate(date)),
+      available: (date: Date) => availableDatesSet.has(toISODate(date)),
     };
-  }, [availableDates]);
+  }, [availableDatesSet]);
 
   const modifiersClassNames = { available: "day-available" };
+
+  console.log("selectedServiceId:", selectedServiceId);
 
   return (
     <section className="mx-auto max-w-6xl py-4">
@@ -218,7 +249,7 @@ export default function BookingPage() {
                   type="radio"
                   name="barber"
                   className="peer sr-only"
-                  checked={selectedBarberId === barber.id}
+                  checked={effectiveBarberId === barber.id}
                   onChange={() => onChangeBarber(barber.id)}
                 />
 
@@ -253,7 +284,7 @@ export default function BookingPage() {
                   type="radio"
                   name="service"
                   className="peer sr-only"
-                  checked={selectedServiceId === service.id}
+                  checked={effectiveServiceId === service.id}
                   onChange={() => onChangeService(service.id)}
                 />
 
