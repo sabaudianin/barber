@@ -4,6 +4,7 @@ import "../styles/globals.css";
 
 import { Navbar } from "@/components/navbar/Navbar";
 import { Footer } from "@/components/footer/Footer";
+import Provider from "./provider";
 
 export const metadata: Metadata = {
   title: "Barber",
@@ -20,8 +21,10 @@ export default function RootLayout({
       <body
         className={` ${limelight.variable} ${ballet.variable}  ${diplomata.variable} antialiased`}
       >
-        <Navbar />
-        {children}
+        <Provider>
+          <Navbar />
+          {children}
+        </Provider>
         <Footer />
       </body>
     </html>

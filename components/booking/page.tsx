@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { DateTime } from "luxon";
 import { pl } from "react-day-picker/locale";
+import { useQuery } from "@tanstack/react-query";
 
 type Barber = { id: string; name: string };
 type Service = {
@@ -28,10 +29,6 @@ const toMonthString = (date: Date): string => {
 };
 
 export default function BookingPage() {
-  //dane z backendu
-  const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-
   //wybrane barbery i uługi dni przez usera
   const [selectedBarberId, setSelectedBarberId] = useState<string>("");
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
@@ -45,27 +42,39 @@ export default function BookingPage() {
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
   const [loadingMonth, setLoadingMonth] = useState(false);
 
-  //strona sie ładuje pobieramy barberów i usługi
-  useEffect(() => {
-    async function loadInitialData() {
-      const [bRes, sRes] = await Promise.all([
-        fetch("/api/barbers"),
-        fetch("/api/services"),
-      ]);
-      const [barb, serv] = await Promise.all([bRes.json(), sRes.json()]);
-      setBarbers(barb);
-      setServices(serv);
+  //modal
+  const [isOpen, setIsOpen] = useState(false);
 
-      //ustawiamy defaultowe zaznaczenia
-      if (barb?.[0]?.id) {
-        setSelectedBarberId(barb[0].id);
-      }
-      if (serv?.[0]?.id) {
-        setSelectedServiceId(serv[0].id);
-      }
-    }
-    loadInitialData();
-  }, []);
+  //godzina kliknieta
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  //formularz
+  const [customerName, setCustomerName] = useState<string>("");
+  const [customerPhone, setCustomerPhone] = useState<string>("");
+
+  //komunikaty
+
+  const barbersQuery = useQuery({
+    queryKey: ["barbers"],
+    queryFn: async () => {
+      const result = await fetch("/api/barbers");
+      if (!result.ok) throw new Error("failed to fetch barbers");
+      return (await result.json()) as Barber[];
+    },
+  });
+
+  const servicesQuery = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const result = await fetch("/api/services");
+      if (!result.ok) throw new Error("failed to fetch services");
+      const data = await result.json();
+      return data as Service[];
+    },
+  });
+
+  const barbers = barbersQuery.data ?? [];
+  const services = servicesQuery.data ?? [];
 
   //pobieranie dostępnych dni miesiąca
   useEffect(() => {
@@ -124,7 +133,8 @@ export default function BookingPage() {
 
   //funkcja wyswietlająca wolne sloty
   const renderSlots = () => {
-    if (!selectedDay) return <p>Wybierz dzień z kalendarza</p>;
+    if (!selectedDay)
+      return <p className="text-center">Wybierz dzień z kalendarza</p>;
     if (loadingSlots) return <p>...Ładowanie ...</p>;
     if (slots.length === 0) return <p>Brak wolnych terminów</p>;
 
@@ -194,58 +204,70 @@ export default function BookingPage() {
           Wybierz Barbera:
         </h2>
         <div className="flex justify-center items-center max-w-[350px] select-none">
-          {barbers.map((barber) => (
-            <label
-              className="m-1"
-              key={barber.id}
-            >
-              <input
-                type="radio"
-                name="barber"
-                className="peer sr-only"
-                checked={selectedBarberId === barber.id}
-                onChange={() => onChangeBarber(barber.id)}
-              />
-
-              <span
-                className="relative flex flex-col items-center justify-center w-20 min-h-20 rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 before:content-[''] before:absolute before:block before:w-3 before:h-3 before:rounded-full before:border-2  before:bg-green-500 before:top-1 before:left-1 before:opacity-0 before:scale-0 before:transition before:duration-200 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 
-                 peer-checked:bg-amber-400 peer-checked:before:opacity-100 peer-checked:before:scale-100 peer-checked:before:bg-amber-600 peer-checked:before:border-amber-700 peer-focus:background-red-500"
+          {barbersQuery.isLoading ? (
+            <p>Ładowanie barberów…</p>
+          ) : barbersQuery.isError ? (
+            <p>Błąd: {(barbersQuery.error as Error).message}</p>
+          ) : (
+            barbers.map((barber) => (
+              <label
+                className="m-1"
+                key={barber.id}
               >
-                <span className="text-black transition peer-checked:font-extrabold font-lime">
-                  {barber.name}
+                <input
+                  type="radio"
+                  name="barber"
+                  className="peer sr-only"
+                  checked={selectedBarberId === barber.id}
+                  onChange={() => onChangeBarber(barber.id)}
+                />
+
+                <span
+                  className="relative flex flex-col items-center justify-center w-20 min-h-20 rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 before:content-[''] before:absolute before:block before:w-3 before:h-3 before:rounded-full before:border-2  before:bg-green-500 before:top-1 before:left-1 before:opacity-0 before:scale-0 before:transition before:duration-200 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 
+                 peer-checked:bg-amber-400 peer-checked:before:opacity-100 peer-checked:before:scale-100 peer-checked:before:bg-amber-600 peer-checked:before:border-amber-700 peer-focus:background-red-500"
+                >
+                  <span className="text-black transition peer-checked:font-extrabold font-lime">
+                    {barber.name}
+                  </span>
                 </span>
-              </span>
-            </label>
-          ))}
+              </label>
+            ))
+          )}
         </div>
       </div>
 
       <div>
         <h2 className="font-bold font-lime p-2 text-center">Wybierz Usługę:</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {services.map((service) => (
-            <label
-              className="m-1"
-              key={service.id}
-            >
-              <input
-                type="radio"
-                name="service"
-                className="peer sr-only"
-                checked={selectedServiceId === service.id}
-                onChange={() => onChangeService(service.id)}
-              />
-
-              <span
-                className="relative flex flex-col items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 
-                peer-checked:bg-amber-400 peer-focus:background-red-500"
+          {barbersQuery.isLoading ? (
+            <p>Ładowanie usług…</p>
+          ) : barbersQuery.isError ? (
+            <p>Błąd: {(barbersQuery.error as Error).message}</p>
+          ) : (
+            services.map((service) => (
+              <label
+                className="m-1"
+                key={service.id}
               >
-                <span className="text-black transition peer-checked:font-extrabold font-semibold">
-                  {service.name}
+                <input
+                  type="radio"
+                  name="service"
+                  className="peer sr-only"
+                  checked={selectedServiceId === service.id}
+                  onChange={() => onChangeService(service.id)}
+                />
+
+                <span
+                  className="relative flex flex-col items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 
+                peer-checked:bg-amber-400 peer-focus:background-red-500"
+                >
+                  <span className="text-black transition peer-checked:font-extrabold font-semibold">
+                    {service.name}
+                  </span>
                 </span>
-              </span>
-            </label>
-          ))}
+              </label>
+            ))
+          )}
         </div>
       </div>
 
@@ -284,7 +306,7 @@ export default function BookingPage() {
           />
         </div>
 
-        <div>{renderSlots()}</div>
+        <div className="py-4">{renderSlots()}</div>
       </section>
     </section>
   );
