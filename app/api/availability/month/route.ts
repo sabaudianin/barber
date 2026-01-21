@@ -85,9 +85,8 @@ export async function GET(req: Request) {
   const duration = service.durationMinutes;
 
   //lecimy po dniach  w miesiącu
-  const availibleDates: string[] = [];
+  const availableDates: string[] = [];
   const daysInMonth = month.daysInMonth;
-
   for (let d = 1; d <= daysInMonth; d++) {
     const day = month.set({ day: d });
     const hours = getOpeningHours(day);
@@ -135,7 +134,7 @@ export async function GET(req: Request) {
       throw new Error("Invalid date while building month availibility");
     }
     if (hasAny) {
-      availibleDates.push(iso);
+      availableDates.push(iso);
     }
   }
 
@@ -143,6 +142,6 @@ export async function GET(req: Request) {
     month: month.toFormat("yyyy-MM"),
     barberId,
     serviceId,
-    availibleDates,
+    availableDates,
   });
 }

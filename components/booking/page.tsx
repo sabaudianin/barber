@@ -15,11 +15,17 @@ type Service = {
 
 const ZONE = "Europe/Warsaw";
 
-function toISODate(date: Date): string {
+const toISODate = (date: Date): string => {
   const iso = DateTime.fromJSDate(date).setZone(ZONE).toISODate();
   if (!iso) throw new Error("Invalid date");
   return iso;
-}
+};
+
+//ustwiamy miesiac
+
+const toMonthString = (date: Date): string => {
+  return DateTime.fromJSDate(date).setZone(ZONE).toFormat("yyyy-MM");
+};
 
 export default function BookingPage() {
   //dane z backendu
@@ -29,11 +35,15 @@ export default function BookingPage() {
   //wybrane barbery i uługi dni przez usera
   const [selectedBarberId, setSelectedBarberId] = useState<string>("");
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined);
+  const [month, setMonth] = useState<Date>(new Date());
 
   //dostepność
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
+  const [loadingMonth, setLoadingMonth] = useState(false);
 
   //strona sie ładuje pobieramy barberów i usługi
   useEffect(() => {
@@ -56,6 +66,32 @@ export default function BookingPage() {
     }
     loadInitialData();
   }, []);
+
+  //pobieranie dostępnych dni miesiąca
+  useEffect(() => {
+    async function loadMonthAvailability() {
+      if (!selectedBarberId || !selectedServiceId) return;
+
+      setLoadingMonth(true);
+
+      const msc = toMonthString(month);
+      const url = `/api/availability/month?barberId=${encodeURIComponent(selectedBarberId)}&serviceId=${encodeURIComponent(selectedServiceId)}&month=${msc}`;
+      console.log("month req", {
+        selectedBarberId,
+        selectedServiceId,
+        month: msc,
+      });
+      const result = await fetch(url);
+      const data = await result.json();
+      console.log("month res", data);
+      console.log("status", result.status);
+
+      setAvailableDates(new Set<string>(data.availableDates ?? []));
+      setLoadingMonth(false);
+    }
+
+    loadMonthAvailability();
+  }, [selectedBarberId, selectedServiceId, month]);
 
   //zamian paramterów barbera, service , day - pobieranie wolnych slotów
 
@@ -83,13 +119,16 @@ export default function BookingPage() {
     setSelectedBarberId(id);
     setSelectedDay(undefined);
     setSlots([]);
+    setAvailableDates(new Set());
   };
   const onChangeService = (id: string) => {
     setSelectedServiceId(id);
     setSelectedDay(undefined);
     setSlots([]);
+    setAvailableDates(new Set());
   };
 
+  //funkcja wyswietlająca wolne sloty
   const renderSlots = () => {
     if (!selectedDay) return <p>Wybierz dzień z kalendarza</p>;
     if (loadingSlots) return <p>...Ładowanie ...</p>;
@@ -112,6 +151,15 @@ export default function BookingPage() {
     );
   };
 
+  //kropeczka dostępności use memo bo przekazujemy ddalej
+  const modifiers = useMemo(() => {
+    return {
+      available: (date: Date) => availableDates.has(toISODate(date)),
+    };
+  }, [availableDates]);
+
+  const modifiersClassNames = { available: "day-available" };
+  console.log(availableDates);
   return (
     <section className="mx-auto max-w-6xl py-4">
       <div>
@@ -186,10 +234,16 @@ export default function BookingPage() {
             mode="single"
             selected={selectedDay}
             onSelect={(day) => setSelectedDay(day ?? undefined)}
+            month={month}
+            onMonthChange={setMonth}
+            modifiers={modifiers}
+            modifiersClassNames={modifiersClassNames}
             footer={
               selectedDay
                 ? `Wybrany dzień: ${selectedDay.toLocaleDateString()}`
-                : "Wybierz dzień."
+                : loadingMonth
+                  ? "Ładowanie dostępności miesiąca"
+                  : "Wybierz dzień."
             }
             classNames={{
               today: `font-extrabold text-amber-100 border-amber-900 border-2 rounded-4xl`,

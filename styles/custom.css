@@ -28,3 +28,19 @@
 .shiny-btn:hover::before {
   animation: button-shine 0.9s ease-out;
 }
+
+.day-available {
+  position: relative;
+}
+
+.day-available::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  background-color: #20c909;
+}
