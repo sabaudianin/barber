@@ -76,15 +76,9 @@ export default function BookingPage() {
 
       const msc = toMonthString(month);
       const url = `/api/availability/month?barberId=${encodeURIComponent(selectedBarberId)}&serviceId=${encodeURIComponent(selectedServiceId)}&month=${msc}`;
-      console.log("month req", {
-        selectedBarberId,
-        selectedServiceId,
-        month: msc,
-      });
+
       const result = await fetch(url);
       const data = await result.json();
-      console.log("month res", data);
-      console.log("status", result.status);
 
       setAvailableDates(new Set<string>(data.availableDates ?? []));
       setLoadingMonth(false);
@@ -150,6 +144,35 @@ export default function BookingPage() {
       </div>
     );
   };
+  //helpery do blokowania dat
+  const today = useMemo(
+    () => DateTime.now().setZone(ZONE).startOf("day").toJSDate(),
+    [],
+  );
+  const startMonth = useMemo(
+    () => DateTime.now().setZone(ZONE).startOf("month").toJSDate(),
+    [],
+  );
+  const endMonth = useMemo(
+    () =>
+      DateTime.now()
+        .setZone(ZONE)
+        .startOf("month")
+        .plus({ months: 1 })
+        .startOf("month")
+        .toJSDate(),
+    [],
+  );
+  const toDate = useMemo(
+    () =>
+      DateTime.now()
+        .setZone(ZONE)
+        .startOf("month")
+        .plus({ months: 1 })
+        .endOf("month")
+        .toJSDate(),
+    [],
+  );
 
   //kropeczka dostępności use memo bo przekazujemy ddalej
   const modifiers = useMemo(() => {
@@ -159,7 +182,7 @@ export default function BookingPage() {
   }, [availableDates]);
 
   const modifiersClassNames = { available: "day-available" };
-  console.log(availableDates);
+
   return (
     <section className="mx-auto max-w-6xl py-4">
       <div>
@@ -238,6 +261,9 @@ export default function BookingPage() {
             onMonthChange={setMonth}
             modifiers={modifiers}
             modifiersClassNames={modifiersClassNames}
+            startMonth={startMonth}
+            endMonth={endMonth}
+            disabled={[{ before: today }, { after: toDate }]}
             footer={
               selectedDay
                 ? `Wybrany dzień: ${selectedDay.toLocaleDateString()}`

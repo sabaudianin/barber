@@ -52,6 +52,19 @@ export async function GET(req: Request) {
       { status: 400 },
     );
   }
+  //zawezenie do bierzącego miesiąca i następnego po nim
+  const now = DateTime.now().setZone(ZONE);
+  const currentMonth = now.startOf("month");
+  const nextMonth = currentMonth.plus({ months: 1 });
+  const requestedMonth = month.startOf("month");
+
+  const monthInRange =
+    requestedMonth.hasSame(currentMonth, "month") ||
+    requestedMonth.hasSame(nextMonth, "month");
+
+  if (!monthInRange) {
+    return NextResponse.json({ error: "Month out of range" }, { status: 400 });
+  }
 
   //czas ttrwania
   const service = await prisma.service.findUnique({
@@ -66,7 +79,7 @@ export async function GET(req: Request) {
   const monthStart = month.startOf("month");
   const monthEnd = month.endOf("month");
 
-  //pobranie bookingóe  w miesiącu
+  //pobranie bookingów  w miesiącu
   const bookings = await prisma.booking.findMany({
     where: {
       barberId,
@@ -76,7 +89,8 @@ export async function GET(req: Request) {
     },
     select: { startAt: true, endAt: true },
   });
-  //zmianaa na time zone warsaw
+
+  //zmiana na time zone warsaw
   const busy = bookings.map((b) => ({
     start: DateTime.fromJSDate(b.startAt, { zone: "utc" }).setZone(ZONE),
     end: DateTime.fromJSDate(b.endAt, { zone: "utc" }).setZone(ZONE),
@@ -87,9 +101,13 @@ export async function GET(req: Request) {
   //lecimy po dniach  w miesiącu
   const availableDates: string[] = [];
   const daysInMonth = month.daysInMonth;
+  const today = now.startOf("day");
+
   for (let d = 1; d <= daysInMonth; d++) {
     const day = month.set({ day: d });
+
     const hours = getOpeningHours(day);
+    if (day < today) continue; //blokujemy wczesniejsze daty przed today
     if (!hours) continue; //zamknięte
 
     const openStart = day.set({
