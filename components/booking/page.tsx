@@ -37,12 +37,6 @@ export default function BookingPage() {
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined);
   const [month, setMonth] = useState<Date>(new Date());
 
-  //dostepność
-  const [slots, setSlots] = useState<string[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
-  const [loadingMonth, setLoadingMonth] = useState(false);
-
   //modal
   const [isOpen, setIsOpen] = useState(false);
 
@@ -54,7 +48,11 @@ export default function BookingPage() {
   const [customerPhone, setCustomerPhone] = useState<string>("");
 
   //komunikaty
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
 
+  //zapytania API
   const barbersQuery = useQuery({
     queryKey: ["barbers"],
     queryFn: async () => {
@@ -80,19 +78,22 @@ export default function BookingPage() {
   const effectiveBarberId = selectedBarberId || barbers[0]?.id || "";
   const effectiveServiceId = selectedServiceId || services[0]?.id || "";
 
+  //pobieranie msca
+
+  const monthStr = toMonthString(month);
+
   const availabilityMonthQuery = useQuery({
     queryKey: [
       "availabilityMonth",
       effectiveBarberId,
       effectiveServiceId,
-      toMonthString(month),
+      monthStr,
     ],
     enabled: !!effectiveBarberId && !!effectiveServiceId,
     queryFn: async () => {
-      const msc = toMonthString(month);
       const url = `/api/availability/month?barberId=${encodeURIComponent(
         effectiveBarberId,
-      )}&serviceId=${encodeURIComponent(effectiveServiceId)}&month=${msc}`;
+      )}&serviceId=${encodeURIComponent(effectiveServiceId)}&month=${monthStr}`;
       const res = await fetch(url);
       if (!res.ok) {
         throw new Error("Failed to fetch month availability");
@@ -105,77 +106,61 @@ export default function BookingPage() {
     return new Set<string>(availabilityMonthQuery.data?.availableDates ?? []);
   }, [availabilityMonthQuery.data]);
 
-  //pobieranie dostępnych dni miesiąca
-  useEffect(() => {
-    async function loadMonthAvailability() {
-      if (!selectedBarberId || !selectedServiceId) return;
-
-      setLoadingMonth(true);
-
-      const msc = toMonthString(month);
-      const url = `/api/availability/month?barberId=${encodeURIComponent(selectedBarberId)}&serviceId=${encodeURIComponent(selectedServiceId)}&month=${msc}`;
-
-      const result = await fetch(url);
-      const data = await result.json();
-
-      setAvailableDates(new Set<string>(data.availableDates ?? []));
-      setLoadingMonth(false);
-    }
-
-    loadMonthAvailability();
-  }, [selectedBarberId, selectedServiceId, month]);
-
-  //zamian paramterów barbera, service , day - pobieranie wolnych slotów
-
-  useEffect(() => {
-    async function loadSlots() {
-      if (!selectedBarberId || !selectedServiceId || !selectedDay) return;
-      setLoadingSlots(true);
-      setSlots([]);
-
+  //pobieranie dnia
+  const availabilityDayQuery = useQuery({
+    queryKey: [
+      "availabilityDay",
+      effectiveBarberId,
+      effectiveServiceId,
+      selectedDay ? toISODate(selectedDay) : null,
+    ],
+    enabled: !!effectiveBarberId && !!effectiveServiceId && !!selectedDay,
+    queryFn: async () => {
+      if (!effectiveBarberId || !effectiveServiceId || !selectedDay) {
+        throw new Error("Missing params for availabilityDayQuery");
+      }
       const date = toISODate(selectedDay);
-      const url = `/api/availability?barberId=${encodeURIComponent(selectedBarberId)}&serviceId=${encodeURIComponent(selectedServiceId)}&date=${date}`;
+      const url = `/api/availability?barberId=${encodeURIComponent(effectiveBarberId)}&serviceId=${encodeURIComponent(effectiveServiceId)}&date=${date}`;
 
-      const result = await fetch(url);
-      const data = await result.json();
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error("Failed to fetch day availability");
+      }
+      return (await res.json()) as { slots: string[] };
+    },
+  });
 
-      setSlots(data.slots ?? []);
-      setLoadingSlots(false);
-    }
-    loadSlots();
-  }, [selectedBarberId, selectedServiceId, selectedDay]);
+  const slots = availabilityDayQuery.data?.slots ?? [];
 
   //jesli zminie barbera usługe reset dnia i slotów zeby nie pokazywać starych już nie aktualnych
 
   const onChangeBarber = (id: string) => {
     setSelectedBarberId(id);
     setSelectedDay(undefined);
-    setSlots([]);
-    setAvailableDates(new Set());
   };
   const onChangeService = (id: string) => {
     setSelectedServiceId(id);
     setSelectedDay(undefined);
-    setSlots([]);
-    setAvailableDates(new Set());
   };
 
   //funkcja wyswietlająca wolne sloty
   const renderSlots = () => {
-    if (!selectedDay)
-      return <p className="text-center">Wybierz dzień z kalendarza</p>;
-    if (loadingSlots) return <p>...Ładowanie ...</p>;
+    if (!selectedDay) return <p>Wybierz dzień z kalendarza</p>;
+    if (availabilityDayQuery.isLoading) return <p>...Ładowanie ...</p>;
+    if (availabilityDayQuery.isError) return <p>Błąd ładowania terminów</p>;
     if (slots.length === 0) return <p>Brak wolnych terminów</p>;
-
     return (
       <div className="flex flex-wrap gap-2">
         {slots.map((slot) => (
           <button
             key={slot}
             className="border p-3 rounded-2xl border-amber-500"
-            onClick={() =>
-              console.log(`Wybrano ${toISODate(selectedDay)} ${slot}`)
-            }
+            onClick={() => {
+              setSelectedTime(slot);
+              setBookingError(null);
+              setBookingSuccess(null);
+              setIsOpen(true);
+            }}
           >
             {slot}
           </button>
@@ -222,8 +207,6 @@ export default function BookingPage() {
 
   const modifiersClassNames = { available: "day-available" };
 
-  console.log("selectedServiceId:", selectedServiceId);
-
   return (
     <section className="mx-auto max-w-6xl py-4">
       <div>
@@ -253,10 +236,7 @@ export default function BookingPage() {
                   onChange={() => onChangeBarber(barber.id)}
                 />
 
-                <span
-                  className="relative flex flex-col items-center justify-center w-20 min-h-20 rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 before:content-[''] before:absolute before:block before:w-3 before:h-3 before:rounded-full before:border-2  before:bg-green-500 before:top-1 before:left-1 before:opacity-0 before:scale-0 before:transition before:duration-200 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 
-                 peer-checked:bg-amber-400 peer-checked:before:opacity-100 peer-checked:before:scale-100 peer-checked:before:bg-amber-600 peer-checked:before:border-amber-700 peer-focus:background-red-500"
-                >
+                <span className="relative flex flex-col items-center justify-center w-20 min-h-20 rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 before:content-[''] before:absolute before:block before:w-3 before:h-3 before:rounded-full before:border-2  before:bg-green-500 before:top-1 before:left-1 before:opacity-0 before:scale-0 before:transition before:duration-200 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 peer-checked:bg-amber-400 peer-checked:before:opacity-100 peer-checked:before:scale-100 peer-checked:before:bg-amber-600 peer-checked:before:border-amber-700 peer-focus:background-red-500">
                   <span className="text-black transition peer-checked:font-extrabold font-lime">
                     {barber.name}
                   </span>
@@ -270,10 +250,10 @@ export default function BookingPage() {
       <div>
         <h2 className="font-bold font-lime p-2 text-center">Wybierz Usługę:</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {barbersQuery.isLoading ? (
+          {servicesQuery.isLoading ? (
             <p>Ładowanie usług…</p>
-          ) : barbersQuery.isError ? (
-            <p>Błąd: {(barbersQuery.error as Error).message}</p>
+          ) : servicesQuery.isError ? (
+            <p>Błąd: {(servicesQuery.error as Error).message}</p>
           ) : (
             services.map((service) => (
               <label
@@ -288,10 +268,7 @@ export default function BookingPage() {
                   onChange={() => onChangeService(service.id)}
                 />
 
-                <span
-                  className="relative flex flex-col items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 
-                peer-checked:bg-amber-400 peer-focus:background-red-500"
-                >
+                <span className="relative flex flex-col          items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 peer-checked:bg-amber-400 peer-focus:background-red-500">
                   <span className="text-black transition peer-checked:font-extrabold font-semibold">
                     {service.name}
                   </span>
@@ -320,7 +297,7 @@ export default function BookingPage() {
             footer={
               selectedDay
                 ? `Wybrany dzień: ${selectedDay.toLocaleDateString()}`
-                : loadingMonth
+                : availabilityMonthQuery.isLoading
                   ? "Ładowanie dostępności miesiąca"
                   : "Wybierz dzień."
             }
