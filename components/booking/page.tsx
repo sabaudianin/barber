@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { DateTime } from "luxon";
 import { pl } from "react-day-picker/locale";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { CreateBookingPayload } from "@/lib/schemas/booking";
+import { ZONE, toISODate, toMonthString } from "@/lib/time/date";
+import { BookingForm } from "./form/BookingForm";
 
 type Barber = { id: string; name: string };
 
@@ -15,21 +18,9 @@ type Service = {
   price: number | null;
 };
 
-const ZONE = "Europe/Warsaw";
-
-const toISODate = (date: Date): string => {
-  const iso = DateTime.fromJSDate(date).setZone(ZONE).toISODate();
-  if (!iso) throw new Error("Invalid date");
-  return iso;
-};
-
-//ustwiamy miesiac
-
-const toMonthString = (date: Date): string => {
-  return DateTime.fromJSDate(date).setZone(ZONE).toFormat("yyyy-MM");
-};
-
 export default function BookingPage() {
+  const queryClient = useQueryClient();
+
   //wybrane barbery i uługi dni przez usera
   const [selectedBarberId, setSelectedBarberId] = useState<string>("");
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
@@ -129,6 +120,43 @@ export default function BookingPage() {
       return (await res.json()) as { slots: string[] };
     },
   });
+  const createBookingMutation = useMutation({
+    mutationFn: async (payload: CreateBookingPayload) => {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Booking failed");
+      return data;
+    },
+    onSuccess: async () => {
+      // odświeżamy kropki
+      await queryClient.invalidateQueries({
+        queryKey: [
+          "availabilityMonth",
+          effectiveBarberId,
+          effectiveServiceId,
+          monthStr,
+        ],
+      });
+
+      // odświeżamy sloty
+      if (selectedDay) {
+        const dayStr = toISODate(selectedDay);
+        await queryClient.invalidateQueries({
+          queryKey: [
+            "availabilityDay",
+            effectiveBarberId,
+            effectiveServiceId,
+            dayStr,
+          ],
+        });
+      }
+    },
+  });
 
   const slots = availabilityDayQuery.data?.slots ?? [];
 
@@ -137,10 +165,12 @@ export default function BookingPage() {
   const onChangeBarber = (id: string) => {
     setSelectedBarberId(id);
     setSelectedDay(undefined);
+    setIsOpen(false);
   };
   const onChangeService = (id: string) => {
     setSelectedServiceId(id);
     setSelectedDay(undefined);
+    setIsOpen(false);
   };
 
   //funkcja wyswietlająca wolne sloty
@@ -316,6 +346,20 @@ export default function BookingPage() {
 
         <div className="py-4">{renderSlots()}</div>
       </section>
+
+      {isOpen && selectedDay && selectedTime && (
+        <BookingForm
+          createBookingMutation={createBookingMutation}
+          barberId={effectiveBarberId}
+          serviceId={effectiveServiceId}
+          time={selectedTime}
+          dateISO={toISODate(selectedDay)}
+          onSuccessClose={() => {
+            setIsOpen(false);
+            setSelectedTime(null);
+          }}
+        />
+      )}
     </section>
   );
 }

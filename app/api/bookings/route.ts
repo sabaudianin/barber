@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-
-const ZONE = "Europe/Warsaw";
+import { ZONE } from "@/lib/time/date";
 
 type CreateBookingBody = {
   barberId: string;
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
         error:
           "Misiing required fields  barberId, serviceId, date, time, customerName, customerPhone",
       },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -45,7 +44,7 @@ export async function POST(req: Request) {
   if (!start.isValid) {
     return NextResponse.json(
       { error: "invalid date or time . USe YYYY-MM-DD HH:mm" },
-      { status: 404 }
+      { status: 404 },
     );
   }
   //get services(duration)
@@ -66,7 +65,7 @@ export async function POST(req: Request) {
   if (!barber || !barber.isActive) {
     return NextResponse.json(
       { error: "barber not found or inactive" },
-      { status: 404 }
+      { status: 404 },
     );
   }
   const end = start.plus({ minutes: service.durationMinutes });
@@ -122,7 +121,7 @@ export async function POST(req: Request) {
     if (e instanceof Error && e?.message === "BOOKING_CONFLICT") {
       return NextResponse.json(
         { error: "Selected time is no longer availible" },
-        { status: 409 }
+        { status: 409 },
       );
     }
     console.error(e);

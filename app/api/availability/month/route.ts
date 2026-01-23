@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-
-const ZONE = "Europe/Warsaw";
-const STEP_MINUTES = 15;
+import { ZONE, STEP_MINUTES } from "@/lib/time/date";
 
 function getOpeningHours(date: DateTime) {
   const weekday = date.weekday;

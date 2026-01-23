@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-
-const ZONE = "Europe/Warsaw";
-const STEP_MINUTES = 15;
+import { ZONE, STEP_MINUTES } from "@/lib/time/date";
 
 function getOpeningHours(date: DateTime) {
   const weekday = date.weekday;
@@ -30,7 +28,7 @@ function overlaps(
   aStart: DateTime,
   aEnd: DateTime,
   bStart: DateTime,
-  bEnd: DateTime
+  bEnd: DateTime,
 ) {
   // [aStart, aEnd) nachodzi na [bStart, bEnd) jeśli:
   return aStart < bEnd && aEnd > bStart;
@@ -45,7 +43,7 @@ export async function GET(req: Request) {
   if (!barberId || !serviceId || !dateStr) {
     return NextResponse.json(
       { error: "Missing required qeuery params" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   //parse date
@@ -53,7 +51,7 @@ export async function GET(req: Request) {
   if (!day.isValid) {
     return NextResponse.json(
       { error: "Invalid date format, use YYY-MM-DD" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -124,7 +122,7 @@ export async function GET(req: Request) {
 
     //check is collide with busy
     const collides = busy.some((b) =>
-      overlaps(slotStart, slotEnd, b.start, b.end)
+      overlaps(slotStart, slotEnd, b.start, b.end),
     );
     if (!collides) {
       slots.push(slotStart.toFormat("HH:mm"));
