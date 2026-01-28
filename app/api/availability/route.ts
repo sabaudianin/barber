@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-import { ZONE, STEP_MINUTES } from "@/lib/time/date";
+import { ZONE, STEP_MINUTES, BOOKING_AFTER_MIN } from "@/lib/time/date";
 
+//dostepnosc w danym dniu
 function getOpeningHours(date: DateTime) {
   const weekday = date.weekday;
   switch (weekday) {
@@ -108,10 +109,23 @@ export async function GET(req: Request) {
     millisecond: 0,
   });
 
-  //generate slots every 15 min
+  //nie pokazujemy minionych godzin, ustawiony okres karencji
+  const now = DateTime.now().setZone(ZONE);
+  const nowStep = (dt: DateTime) => {
+    const base = dt.set({ second: 0, millisecond: 0 });
+    const remain = base.minute % STEP_MINUTES;
+    return remain === 0 ? base : base.plus({ minutes: STEP_MINUTES - remain });
+  };
+  const minAllowedTime = nowStep(now.plus({ minutes: BOOKING_AFTER_MIN }));
+
+  //generate slots every 30 min
 
   const slots: string[] = [];
-  let cursor = openStart;
+
+  let cursor: DateTime = openStart;
+  if (day.hasSame(now, "day")) {
+    cursor = DateTime.max(openStart, minAllowedTime);
+  }
 
   while (cursor < openEnd) {
     const slotStart = cursor;

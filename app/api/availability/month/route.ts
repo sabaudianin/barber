@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-import { ZONE, STEP_MINUTES } from "@/lib/time/date";
+import { ZONE, STEP_MINUTES, BOOKING_AFTER_MIN } from "@/lib/time/date";
 
+//dostepnosci dni w miesciacu
 function getOpeningHours(date: DateTime) {
   const weekday = date.weekday;
   switch (weekday) {
@@ -52,6 +53,7 @@ export async function GET(req: Request) {
   }
   //zawezenie do bierzącego miesiąca i następnego po nim
   const now = DateTime.now().setZone(ZONE);
+
   const currentMonth = now.startOf("month");
   const nextMonth = currentMonth.plus({ months: 1 });
   const requestedMonth = month.startOf("month");
@@ -63,6 +65,13 @@ export async function GET(req: Request) {
   if (!monthInRange) {
     return NextResponse.json({ error: "Month out of range" }, { status: 400 });
   }
+
+  //zeby dzis nie bylo dostepne jak brak dostepnycgh godzin
+  const nowStep = (dt: DateTime) => {
+    const base = dt.set({ second: 0, millisecond: 0 });
+    const remain = base.minute % STEP_MINUTES;
+    return remain === 0 ? base : base.plus({ minutes: STEP_MINUTES - remain });
+  };
 
   //czas ttrwania
   const service = await prisma.service.findUnique({
@@ -127,8 +136,13 @@ export async function GET(req: Request) {
     const dayEnd = day.endOf("day");
     const busyDay = busy.filter((b) => b.start < dayEnd && b.end > dayStart);
 
-    //poszukujemy pierwszego wolnego slotu
-    let cursor = openStart;
+    //poszukujemy pierwszego wolnego slotu, i zeby nie było falszywych wolnych godzin(np 17.20 BOKIING_AFTER =.. nie bedzie dostępne już)
+    let cursor: DateTime = openStart;
+    if (day.hasSame(now, "day")) {
+      const minAllowedTime = nowStep(now.plus({ minutes: BOOKING_AFTER_MIN }));
+      cursor = DateTime.max(openStart, minAllowedTime);
+    }
+
     let hasAny = false;
 
     while (cursor < openEnd) {
