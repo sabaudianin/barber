@@ -34,15 +34,6 @@ export default function BookingPage() {
   //godzina kliknieta
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  //formularz
-  const [customerName, setCustomerName] = useState<string>("");
-  const [customerPhone, setCustomerPhone] = useState<string>("");
-
-  //komunikaty
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
-
   //zapytania API
   const barbersQuery = useQuery({
     queryKey: ["barbers"],
@@ -161,16 +152,20 @@ export default function BookingPage() {
   const slots = availabilityDayQuery.data?.slots ?? [];
 
   //jesli zminie barbera usługe reset dnia i slotów zeby nie pokazywać starych już nie aktualnych
+  const closeModal = () => {
+    setIsOpen(false);
+    setSelectedTime(null);
+  };
 
   const onChangeBarber = (id: string) => {
     setSelectedBarberId(id);
     setSelectedDay(undefined);
-    setIsOpen(false);
+    closeModal();
   };
   const onChangeService = (id: string) => {
     setSelectedServiceId(id);
     setSelectedDay(undefined);
-    setIsOpen(false);
+    closeModal();
   };
 
   //funkcja wyswietlająca wolne sloty
@@ -187,8 +182,7 @@ export default function BookingPage() {
             className="border p-3 rounded-2xl border-amber-500"
             onClick={() => {
               setSelectedTime(slot);
-              setBookingError(null);
-              setBookingSuccess(null);
+
               setIsOpen(true);
             }}
           >
@@ -236,6 +230,19 @@ export default function BookingPage() {
   }, [availableDatesSet]);
 
   const modifiersClassNames = { available: "day-available" };
+
+  //zamknij modal ESC
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeModal();
+      }
+
+      window.addEventListener("keydown", onKeyDown);
+      return () => window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen]);
 
   return (
     <section className="mx-auto max-w-6xl py-4">
