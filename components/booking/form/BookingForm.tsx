@@ -9,7 +9,7 @@ import {
 
 type BookingFormProps = {
   createBookingMutation: {
-    mutateAsync: (payload: CreateBookingPayload) => Promise<any>;
+    mutateAsync: (payload: CreateBookingPayload) => Promise<void>;
     isPending: boolean;
     isError: boolean;
     error: unknown;
@@ -18,6 +18,7 @@ type BookingFormProps = {
   serviceId: string;
   dateISO: string;
   time: string;
+  onBooked?: (info: { dateISO: string; time: string }) => void;
   onSuccessClose: () => void;
 };
 
@@ -28,6 +29,7 @@ export const BookingForm = ({
   dateISO,
   time,
   onSuccessClose,
+  onBooked,
 }: BookingFormProps) => {
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -48,6 +50,7 @@ export const BookingForm = ({
     });
 
     form.reset();
+    onBooked?.({ dateISO, time });
     onSuccessClose();
   });
 
