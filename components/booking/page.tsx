@@ -20,6 +20,8 @@ type Service = {
   price: number | null;
 };
 
+type Toast = { type: "success" | "error"; message: string } | null;
+
 export default function BookingPage() {
   const queryClient = useQueryClient();
 
@@ -35,6 +37,8 @@ export default function BookingPage() {
 
   //godzina kliknieta
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  const [toast, setToast] = useState<Toast>(null);
 
   //zapytania API
   const barbersQuery = useQuery({
@@ -246,6 +250,13 @@ export default function BookingPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen]);
 
+  //toast
+  const showToast = (t: Toast) => {
+    setToast(t);
+    if (!t) return;
+    window.setTimeout(() => setToast(null), 4000);
+  };
+
   return (
     <section className="mx-auto max-w-6xl py-4">
       <div>
@@ -307,7 +318,7 @@ export default function BookingPage() {
                   onChange={() => onChangeService(service.id)}
                 />
 
-                <span className="relative flex flex-col          items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 peer-checked:bg-amber-400 peer-focus:background-red-500">
+                <span className="relative flex flex-col items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-100 transition duration-150 cursor-pointer hover:border-amber-900 hover:before:opacity-100 hover:before:scale-100 peer-checked:border-amber-100 peer-checked:bg-amber-400 peer-focus:background-red-500">
                   <span className="text-black transition peer-checked:font-extrabold font-semibold">
                     {service.name}
                   </span>
@@ -356,6 +367,15 @@ export default function BookingPage() {
         <div className="py-4">{renderSlots()}</div>
       </section>
 
+      {toast && (
+        <div
+          className={`z-50 mx-auto m-4 max-w-md rounded-2xl border p-4 text-center font-bold
+             ${toast.type === "success" ? "border-green-300 bg-green-500/50" : "border-red-300 bg-red-50"}`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       {isOpen && selectedDay && selectedTime && (
         <div
           className="flex items-center justify-center bg-black/20 p-4"
@@ -381,12 +401,19 @@ export default function BookingPage() {
                 </button>
               </div>
             </div>
+
             <BookingForm
               createBookingMutation={createBookingMutation}
               barberId={effectiveBarberId}
               serviceId={effectiveServiceId}
               time={selectedTime}
               dateISO={toISODate(selectedDay)}
+              onBooked={({ dateISO, time }) => {
+                showToast({
+                  type: "success",
+                  message: `Rezerwacja potwierdzona, ${dateISO} - ${time}`,
+                });
+              }}
               onSuccessClose={() => {
                 setIsOpen(false);
                 setSelectedTime(null);
