@@ -84,7 +84,7 @@ export async function POST(req: Request) {
   const endMin = end.hour * 60 + end.minute;
   if (endMin > hours.endMinute) {
     return NextResponse.json(
-      { error: "Xervice end after working hours" },
+      { error: "Service end after working hours" },
       { status: 400 },
     );
   }
