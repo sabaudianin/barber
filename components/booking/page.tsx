@@ -9,6 +9,8 @@ import type { CreateBookingPayload } from "@/lib/schemas/booking";
 import { ZONE, toISODate, toMonthString } from "@/lib/time/date";
 import { BookingForm } from "./form/BookingForm";
 
+import { IoCloseSharp } from "react-icons/io5";
+
 type Barber = { id: string; name: string };
 
 type Service = {
@@ -33,15 +35,6 @@ export default function BookingPage() {
 
   //godzina kliknieta
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-
-  //formularz
-  const [customerName, setCustomerName] = useState<string>("");
-  const [customerPhone, setCustomerPhone] = useState<string>("");
-
-  //komunikaty
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
 
   //zapytania API
   const barbersQuery = useQuery({
@@ -161,16 +154,20 @@ export default function BookingPage() {
   const slots = availabilityDayQuery.data?.slots ?? [];
 
   //jesli zminie barbera usługe reset dnia i slotów zeby nie pokazywać starych już nie aktualnych
+  const closeModal = () => {
+    setIsOpen(false);
+    setSelectedTime(null);
+  };
 
   const onChangeBarber = (id: string) => {
     setSelectedBarberId(id);
     setSelectedDay(undefined);
-    setIsOpen(false);
+    closeModal();
   };
   const onChangeService = (id: string) => {
     setSelectedServiceId(id);
     setSelectedDay(undefined);
-    setIsOpen(false);
+    closeModal();
   };
 
   //funkcja wyswietlająca wolne sloty
@@ -187,8 +184,7 @@ export default function BookingPage() {
             className="border p-3 rounded-2xl border-amber-500"
             onClick={() => {
               setSelectedTime(slot);
-              setBookingError(null);
-              setBookingSuccess(null);
+
               setIsOpen(true);
             }}
           >
@@ -236,6 +232,19 @@ export default function BookingPage() {
   }, [availableDatesSet]);
 
   const modifiersClassNames = { available: "day-available" };
+
+  //zamknij modal ESCgir
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeModal();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen]);
 
   return (
     <section className="mx-auto max-w-6xl py-4">
@@ -348,17 +357,43 @@ export default function BookingPage() {
       </section>
 
       {isOpen && selectedDay && selectedTime && (
-        <BookingForm
-          createBookingMutation={createBookingMutation}
-          barberId={effectiveBarberId}
-          serviceId={effectiveServiceId}
-          time={selectedTime}
-          dateISO={toISODate(selectedDay)}
-          onSuccessClose={() => {
-            setIsOpen(false);
-            setSelectedTime(null);
-          }}
-        />
+        <div
+          className="flex items-center justify-center bg-black/20 p-4"
+          onMouseDown={closeModal}
+        >
+          <div
+            className="relative w-full max-w-md rounded-2xl shadow-xl bg-amber-100/20 p-6"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-center">
+                <h3 className="font-bold">Potwierdz rezerwację</h3>
+                <p>dzień: {toISODate(selectedDay)}</p>
+                <p>godzina: {selectedTime}</p>
+              </div>
+              <div className="">
+                <button
+                  onClick={closeModal}
+                  aria-label="Zamknij"
+                  className="p-3 rounded-lg hover:bg-white/20 absolute top-0 right-0 font-extrabold"
+                >
+                  <IoCloseSharp className="text-amber-500 text-xl" />
+                </button>
+              </div>
+            </div>
+            <BookingForm
+              createBookingMutation={createBookingMutation}
+              barberId={effectiveBarberId}
+              serviceId={effectiveServiceId}
+              time={selectedTime}
+              dateISO={toISODate(selectedDay)}
+              onSuccessClose={() => {
+                setIsOpen(false);
+                setSelectedTime(null);
+              }}
+            />
+          </div>
+        </div>
       )}
     </section>
   );
