@@ -42,17 +42,23 @@ export default function AdminPage() {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/bookings/${id}`, { method: "PATCH" });
+      const res = await fetch(`/api/admin/bookings/${id}`, { method: "PATCH" });
+      const data = await res.json().catch(() => {});
       if (!res.ok) {
-        throw new Error("failed to cancel booking");
+        throw new Error(
+          data?.error ?? `failed to cancel booking, ${res.status}`,
+        );
       }
-      return res.json();
+      return data;
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["adminBookings", date] });
       //odswiezenie avialibilty na froncie
       await qc.invalidateQueries({ queryKey: ["availabilityMonth"] });
       await qc.invalidateQueries({ queryKey: ["availabilityDay"] });
+    },
+    onError: (err) => {
+      console.log(err);
     },
   });
 
