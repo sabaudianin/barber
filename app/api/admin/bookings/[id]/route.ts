@@ -3,10 +3,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   _req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const id = params.id;
-
+  const { id } = await params;
+  console.log("params:", params);
   //walidacja
   if (!id) {
     return NextResponse.json({ error: "Missing booking id" }, { status: 400 });
