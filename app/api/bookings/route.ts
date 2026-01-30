@@ -63,7 +63,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "CLosed on this time" }, { status: 400 });
   }
   const startMin = start.hour * 60 + start.minute;
-  if (startMin < hours.startMinute || startMin >= hours.endMinute) {
+  const openStartMin = hours.startHour * 60 + hours.startMinute;
+  const openEndMin = hours.endHour * 60 + hours.endMinute;
+
+  if (startMin < openStartMin || startMin >= openEndMin) {
     return NextResponse.json({ error: "Outside open hours" }, { status: 400 });
   }
 
@@ -79,7 +82,7 @@ export async function POST(req: Request) {
   //walidacja czy usługa nie wykracza poza working hours
   const end = start.plus({ minutes: service.durationMinutes });
   const endMin = end.hour * 60 + end.minute;
-  if (endMin > hours.endMinute) {
+  if (endMin > openEndMin) {
     return NextResponse.json(
       { error: "Service end after working hours" },
       { status: 400 },

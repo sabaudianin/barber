@@ -8,7 +8,7 @@ datasource db {
 
 enum BookingStatus {
   BOOKED
-  CANCELLED
+  CANCELED
 }
 
 model Barber {
