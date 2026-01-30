@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
 import { ZONE } from "@/lib/time/date";
-import {
-  CreateBookingPayload,
-  createBookingSchema,
-} from "@/lib/schemas/booking";
+import { createBookingSchema } from "@/lib/schemas/booking";
 
 function getOpeningHours(date: DateTime) {
   const weekday = date.weekday;
