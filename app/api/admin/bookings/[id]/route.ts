@@ -16,7 +16,7 @@ export async function PATCH(
   try {
     const updateBooking = await prisma.booking.update({
       where: { id },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELED" },
       select: { id: true, status: true },
     });
 
