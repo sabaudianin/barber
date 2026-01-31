@@ -16,6 +16,7 @@ model Barber {
   name      String
   isActive  Boolean   @default(true)
   bookings  Booking[]
+  timeOffs TimeOff[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -52,3 +53,17 @@ model Booking {
   @@index([barberId, startAt])
   @@index([barberId, endAt])
 }
+
+model TimeOff {
+  id        String   @id @default(cuid())
+  barberId  String
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  barber    Barber   @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([barberId, startAt, endAt])
+}
+
