@@ -6,7 +6,7 @@ import { DateTime } from "luxon";
 import { pl } from "react-day-picker/locale";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateBookingPayload } from "@/lib/schemas/booking";
-import { ZONE, toISODate, toMonthString } from "@/lib/time/date";
+import { ZONE, toJsDateIso, toMonthString } from "@/lib/time/date";
 import { BookingForm } from "./form/BookingForm";
 
 import { IoCloseSharp } from "react-icons/io5";
@@ -39,6 +39,12 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const [toast, setToast] = useState<Toast>(null);
+
+  //liczymy day w jednym miejscu
+  const selectedDayIso = useMemo(
+    () => (selectedDay ? toJsDateIso(selectedDay) : null),
+    [selectedDay],
+  );
 
   //zapytania API
   const barbersQuery = useQuery({
@@ -100,15 +106,15 @@ export default function BookingPage() {
       "availabilityDay",
       effectiveBarberId,
       effectiveServiceId,
-      selectedDay ? toISODate(selectedDay) : null,
+      selectedDayIso,
     ],
-    enabled: !!effectiveBarberId && !!effectiveServiceId && !!selectedDay,
+    enabled: !!effectiveBarberId && !!effectiveServiceId && !!selectedDayIso,
     queryFn: async () => {
-      if (!effectiveBarberId || !effectiveServiceId || !selectedDay) {
+      if (!effectiveBarberId || !effectiveServiceId || !selectedDayIso) {
         throw new Error("Missing params for availabilityDayQuery");
       }
-      const date = toISODate(selectedDay);
-      const url = `/api/availability?barberId=${encodeURIComponent(effectiveBarberId)}&serviceId=${encodeURIComponent(effectiveServiceId)}&date=${date}`;
+
+      const url = `/api/availability?barberId=${encodeURIComponent(effectiveBarberId)}&serviceId=${encodeURIComponent(effectiveServiceId)}&date=${selectedDayIso}`;
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -142,13 +148,12 @@ export default function BookingPage() {
 
       // odświeżamy sloty
       if (selectedDay) {
-        const dayStr = toISODate(selectedDay);
         await queryClient.invalidateQueries({
           queryKey: [
             "availabilityDay",
             effectiveBarberId,
             effectiveServiceId,
-            dayStr,
+            selectedDayIso,
           ],
         });
       }
@@ -231,7 +236,7 @@ export default function BookingPage() {
   //kropeczka dostępności use memo bo przekazujemy ddalej
   const modifiers = useMemo(() => {
     return {
-      available: (date: Date) => availableDatesSet.has(toISODate(date)),
+      available: (date: Date) => availableDatesSet.has(toJsDateIso(date)),
     };
   }, [availableDatesSet]);
 
@@ -376,7 +381,7 @@ export default function BookingPage() {
         </div>
       )}
 
-      {isOpen && selectedDay && selectedTime && (
+      {isOpen && selectedDay && selectedTime && selectedDayIso && (
         <div
           className="flex items-center justify-center bg-black/20 p-4"
           onMouseDown={closeModal}
@@ -388,7 +393,7 @@ export default function BookingPage() {
             <div className="flex items-center justify-center gap-4">
               <div className="text-center">
                 <h3 className="font-bold">Potwierdz rezerwację</h3>
-                <p>dzień: {toISODate(selectedDay)}</p>
+                <p>dzień: {selectedDayIso}</p>
                 <p>godzina: {selectedTime}</p>
               </div>
               <div className="">
@@ -407,7 +412,7 @@ export default function BookingPage() {
               barberId={effectiveBarberId}
               serviceId={effectiveServiceId}
               time={selectedTime}
-              dateISO={toISODate(selectedDay)}
+              dateISO={selectedDayIso}
               onBooked={({ dateISO, time }) => {
                 showToast({
                   type: "success",
