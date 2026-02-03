@@ -2,34 +2,11 @@ import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
 import { ZONE, STEP_MINUTES, BOOKING_AFTER_MIN } from "@/lib/time/date";
-
-//dostepnosci dni w miesciacu
-function getOpeningHours(date: DateTime) {
-  const weekday = date.weekday;
-  switch (weekday) {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-      return { startHour: 10, startMinute: 0, endHour: 18, endMinute: 0 };
-    case 6:
-      return { startHour: 9, startMinute: 0, endHour: 15, endMinute: 0 };
-    case 7:
-      return null;
-    default:
-      return null;
-  }
-}
-
-function overlaps(
-  aStart: DateTime,
-  aEnd: DateTime,
-  bStart: DateTime,
-  bEnd: DateTime,
-) {
-  return aStart < bEnd && aEnd > bStart;
-}
+import {
+  getOpeningHours,
+  overlaps,
+  getBusyForMonth,
+} from "@/lib/availability/availabilty";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -82,41 +59,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Service not found" }, { status: 404 });
   }
 
-  //GRanice miesiąca
-  const monthStart = month.startOf("month");
-  const monthEnd = month.endOf("month");
-
-  //pobranie bookingów  w miesiącu
-  const bookings = await prisma.booking.findMany({
-    where: {
-      barberId,
-      status: "BOOKED",
-      startAt: { lt: monthEnd.toJSDate() },
-      endAt: { gt: monthStart.toJSDate() },
-    },
-    select: { startAt: true, endAt: true },
-  });
-
-  //pobranie niedostepnych dat dla barberów
-  const timeOff = await prisma.timeOff.findMany({
-    where: {
-      barberId,
-      startAt: { lt: monthEnd.toJSDate() },
-      endAt: { gt: monthStart.toJSDate() },
-    },
-    select: { startAt: true, endAt: true },
-  });
-
-  const busy = [
-    ...bookings.map((b) => ({
-      start: DateTime.fromJSDate(b.startAt, { zone: "utc" }).setZone(ZONE),
-      end: DateTime.fromJSDate(b.endAt, { zone: "utc" }).setZone(ZONE),
-    })),
-    ...timeOff.map((t) => ({
-      start: DateTime.fromJSDate(t.startAt, { zone: "utc" }).setZone(ZONE),
-      end: DateTime.fromJSDate(t.endAt, { zone: "utc" }).setZone(ZONE),
-    })),
-  ];
+  const busy = await getBusyForMonth({ barberId, month });
 
   //zmiana na time zone warsaw
   const duration = service.durationMinutes;
