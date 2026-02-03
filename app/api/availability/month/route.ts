@@ -97,12 +97,28 @@ export async function GET(req: Request) {
     select: { startAt: true, endAt: true },
   });
 
-  //zmiana na time zone warsaw
-  const busy = bookings.map((b) => ({
-    start: DateTime.fromJSDate(b.startAt, { zone: "utc" }).setZone(ZONE),
-    end: DateTime.fromJSDate(b.endAt, { zone: "utc" }).setZone(ZONE),
-  }));
+  //pobranie niedostepnych dat dla barberów
+  const timeOff = await prisma.timeOff.findMany({
+    where: {
+      barberId,
+      startAt: { lt: monthEnd.toJSDate() },
+      endAt: { gt: monthStart.toJSDate() },
+    },
+    select: { startAt: true, endAt: true },
+  });
 
+  const busy = [
+    ...bookings.map((b) => ({
+      start: DateTime.fromJSDate(b.startAt, { zone: "utc" }).setZone(ZONE),
+      end: DateTime.fromJSDate(b.endAt, { zone: "utc" }).setZone(ZONE),
+    })),
+    ...timeOff.map((t) => ({
+      start: DateTime.fromJSDate(t.startAt, { zone: "utc" }).setZone(ZONE),
+      end: DateTime.fromJSDate(t.endAt, { zone: "utc" }).setZone(ZONE),
+    })),
+  ];
+
+  //zmiana na time zone warsaw
   const duration = service.durationMinutes;
 
   //lecimy po dniach  w miesiącu
