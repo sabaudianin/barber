@@ -88,11 +88,26 @@ export async function GET(req: Request) {
     select: { startAt: true, endAt: true },
   });
 
-  //parse dateTIme ZOne Warsaw
-  const busy = bookings.map((b) => ({
-    start: DateTime.fromJSDate(b.startAt, { zone: "utc" }).setZone(ZONE),
-    end: DateTime.fromJSDate(b.endAt, { zone: "utc" }).setZone(ZONE),
-  }));
+  //get timeoff
+  const timeOff = await prisma.timeOff.findMany({
+    where: {
+      barberId,
+      startAt: { lt: dayEnd.toJSDate() },
+      endAt: { gt: dayStart.toJSDate() },
+    },
+    select: { startAt: true, endAt: true },
+  });
+
+  const busy = [
+    ...bookings.map((b) => ({
+      start: DateTime.fromJSDate(b.startAt, { zone: "utc" }).setZone(ZONE),
+      end: DateTime.fromJSDate(b.endAt, { zone: "utc" }).setZone(ZONE),
+    })),
+    ...timeOff.map((t) => ({
+      start: DateTime.fromJSDate(t.startAt, { zone: "utc" }).setZone(ZONE),
+      end: DateTime.fromJSDate(t.endAt, { zone: "utc" }).setZone(ZONE),
+    })),
+  ];
 
   //every single day opening hours
   const openStart = day.set({

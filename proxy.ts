@@ -8,7 +8,7 @@ function unauthorized() {
   });
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isAdminRoute =
@@ -17,16 +17,18 @@ export function middleware(req: NextRequest) {
   if (!isAdminRoute) return NextResponse.next();
 
   const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Basic")) return unauthorized();
+  if (!auth?.startsWith("Basic ")) return unauthorized();
 
   const base64 = auth.slice("Basic ".length);
-  const [user, pass] = atob(base64).split("");
+  const decoded = atob(base64); // "user:pass"
+  const [user, pass] = decoded.split(":");
 
-  const ADMIN_USER = process.env.ADMIN_USER;
-  const ADMIN_PASS = process.env.ADMIN_PASS;
+  const ADMIN_USER = (process.env.ADMIN_USER ?? "").trim();
+  const ADMIN_PASS = (process.env.ADMIN_PASS ?? "").trim();
 
-  if (!ADMIN_PASS || !ADMIN_USER) return unauthorized();
-  if (user !== ADMIN_USER || pass !== ADMIN_PASS) return unauthorized();
+  if (!ADMIN_USER || !ADMIN_PASS) return unauthorized();
+  if ((user ?? "").trim() !== ADMIN_USER) return unauthorized();
+  if ((pass ?? "").trim() !== ADMIN_PASS) return unauthorized();
 
   return NextResponse.next();
 }
