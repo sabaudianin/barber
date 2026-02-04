@@ -1,16 +1,42 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: barber_db
-    restart: unless-stopped
     environment:
       POSTGRES_USER: barber
       POSTGRES_PASSWORD: barberpass
       POSTGRES_DB: barber
-    ports:
-      - "5432:5432"
     volumes:
-      - barber_pgdata:/var/lib/postgresql/data
+      - barber_db_data:/var/lib/postgresql/data
+    networks:
+      - barber_net
+    restart: unless-stopped
+    # app może wstartować zanim  postgres zacznie przyjmowac polacznia,dajemy healthcheck i depends_on condition: health_check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barber -d barber"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    container_name: barber_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://barber:barberpass@db:5432/barber
+      ADMIN_USER: admin
+      ADMIN_PASS: ${ADMIN_PASS}
+    ports:
+      - "3000:3000"
+    networks:
+      - barber_net
+    restart: unless-stopped
 
 volumes:
-  barber_pgdata:
+  barber_db_data:
+
+networks:
+  barber_net:
