@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ZONE, toDateIso } from "@/lib/time/date";
+import Link from "next/link";
+import { IoArrowBackCircleOutline, IoCalendarOutline } from "react-icons/io5";
 
 type Barber = { id: string; name: string };
 type TimeOffItem = {
@@ -117,16 +119,29 @@ export default function AdminTimeOffs() {
   }, [items]);
 
   return (
-    <section className="mx-auto ma-w-6xl p-4">
-      <h1 className="text-xl font-bold text-center">Urlopy</h1>
-      <div className="flex items-center gap-2">
+    <section className="mx-auto max-w-6xl">
+      <div>
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 font-bold underline"
+        >
+          <IoArrowBackCircleOutline className="text-xl" />
+          Wróc do Panelu
+        </Link>
+      </div>
+      <h1 className="text-xl font-bold text-center p-2">Urlopy Pracowników</h1>
+      <div className="flex items-center justify-center gap-2">
         <label className="font-bold text-xl">Data</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="rounded-2xl border-p-2"
-        />
+        <div className="relative inline-block">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-2xl border p-2 "
+          />
+
+          <IoCalendarOutline className="absolute right-3 top-1/2 -translate-y-1/2  text-white" />
+        </div>
         {timeoffQuery.isLoading && <p>..ŁADOWANIE..</p>}
       </div>
       <div className="flex justify-center items-center">
@@ -135,14 +150,14 @@ export default function AdminTimeOffs() {
         ) : barbersQuery.isError ? (
           <p className="text-red-500">{barbersQuery.error.message}</p>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 p-2">
             {barbers.map((barb) => (
               <button
                 key={barb.id}
                 className={[
-                  "rounded-xl border px-3 py-2",
-                  effectiveBarberId === barb.id && "border-4 font-bold",
-                ].join()}
+                  "rounded-xl border p-3",
+                  effectiveBarberId === barb.id && "font-bold border-amber-500",
+                ].join(" ")}
                 onClick={() => setSelectedBarberId(barb.id)}
               >
                 {barb.name}
