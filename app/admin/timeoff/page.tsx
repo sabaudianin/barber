@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ZONE, toDateIso } from "@/lib/time/date";
+import Link from "next/link";
+import { IoArrowBackCircleOutline, IoCalendarOutline } from "react-icons/io5";
 
 type Barber = { id: string; name: string };
 type TimeOffItem = {
@@ -116,5 +118,141 @@ export default function AdminTimeOffs() {
     });
   }, [items]);
 
-  return null;
+  return (
+    <section className="mx-auto max-w-6xl">
+      <div>
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 font-bold underline"
+        >
+          <IoArrowBackCircleOutline className="text-xl" />
+          Wróc do Panelu
+        </Link>
+      </div>
+      <h1 className="text-xl font-bold text-center p-2">Urlopy Pracowników</h1>
+      <div className="flex items-center justify-center gap-2">
+        <label className="font-bold text-xl">Data</label>
+        <div className="relative inline-block">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-2xl border p-2 "
+          />
+
+          <IoCalendarOutline className="absolute right-3 top-1/2 -translate-y-1/2  text-white" />
+        </div>
+        {timeoffQuery.isLoading && <p>..ŁADOWANIE..</p>}
+      </div>
+      <div className="flex justify-center items-center">
+        {barbersQuery.isLoading ? (
+          <p>...Ładowanie barberów</p>
+        ) : barbersQuery.isError ? (
+          <p className="text-red-500">{barbersQuery.error.message}</p>
+        ) : (
+          <div className="flex flex-wrap gap-2 p-2">
+            {barbers.map((barb) => (
+              <button
+                key={barb.id}
+                className={[
+                  "rounded-xl border p-3",
+                  effectiveBarberId === barb.id && "font-bold border-amber-500",
+                ].join(" ")}
+                onClick={() => setSelectedBarberId(barb.id)}
+              >
+                {barb.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="rounded-2xl border p-4 m-2">
+        <div className="font-semibold text-center text-xl">Dodaj przerwę</div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="text-sm font-medium">Start</label>
+            <input
+              type="time"
+              className="w-full rounded-lg border p-2"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Koniec</label>
+            <input
+              type="time"
+              className="w-full rounded-lg border p-2"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Powód (opcjonalnie)</label>
+            <input
+              className="w-full rounded-lg border p-2"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Przerwa / Urlop"
+            />
+          </div>
+        </div>
+
+        {addMutation.isError ? (
+          <p className="text-sm text-red-500">
+            {(addMutation.error as Error).message}
+          </p>
+        ) : null}
+
+        <button
+          className="rounded-xl border bg-black text-white px-4 py-2 disabled:opacity-60 text-center font-bold"
+          disabled={!effectiveBarberId || addMutation.isPending}
+          onClick={() => addMutation.mutate()}
+        >
+          {addMutation.isPending ? "Dodaję…" : "Dodaj"}
+        </button>
+      </div>
+
+      <div className="rounded-2xl border  m-2">
+        <div className=" p-3 font-semibold text-xl text-center">
+          Zaplanowane Urlopy:
+        </div>
+
+        {timeoffQuery.isError ? (
+          <div className="p-3 text-red-500">
+            {(timeoffQuery.error as Error).message}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="p-3 text-center">Brak przerw.</div>
+        ) : (
+          rows.map((row) => (
+            <div
+              key={row.id}
+              className="flex items-center justify-between gap-3 p-3 border-t"
+            >
+              <div>
+                <div className="font-medium">
+                  {row.start} : {row.end}
+                </div>
+                {row.reason ? (
+                  <div className="text-xs text-gray-500">{row.reason}</div>
+                ) : null}
+              </div>
+
+              <button
+                className="rounded-xl border px-3 py-2 disabled:opacity-60"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(row.id)}
+              >
+                {deleteMutation.isPending ? "Usuwam…" : "Usuń"}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
 }

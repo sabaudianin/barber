@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ZONE } from "@/lib/time/date";
+import Link from "next/link";
+import {
+  IoArrowForwardCircleOutline,
+  IoCalendarOutline,
+} from "react-icons/io5";
 
 type Booking = {
   id: string;
@@ -76,16 +81,31 @@ export default function AdminPage() {
   }, [bookingQuery.data]);
 
   return (
-    <section className="mx-auto max-w-5xl p-6 space-y-5">
-      <h1 className="text-center font-bold text-2xl">REZERWACJE</h1>
+    <section className="mx-auto max-w-6xl py-4 px-1">
+      <div className=" p-2">
+        <Link
+          href="/admin/timeoff"
+          className="flex items-center gap-2"
+        >
+          Przejdz do Urlopy/Przerwy{" "}
+          <IoArrowForwardCircleOutline className="text-xl" />
+        </Link>
+      </div>
+      <h1 className="text-center font-bold text-2xl p-2">REZERWACJE</h1>
       <div className="flex flex-col items-center justify-center gap-4">
         <label>Wybierz Dzień</label>
-        <input
-          type="date"
-          className="rounded-xl border p-2"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+
+        <div className="relative inline-block">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-2xl border p-2 "
+          />
+
+          <IoCalendarOutline className="absolute right-3 top-1/2 -translate-y-1/2  text-white" />
+        </div>
+
         {bookingQuery.isLoading && (
           <p className="text-amber-300">...Ładowanie...</p>
         )}
@@ -100,28 +120,28 @@ export default function AdminPage() {
           <p>Brak rezerwacji w dniu</p>
         </div>
       ) : (
-        <div className="">
-          <div className="grid grid-cols-10 gap-2 p-4 border">
+        <div className="py-2 text-xs">
+          <div className="grid grid-cols-10 gap-2 py-2 px-1 border">
             <div className="col-span-2">Godz</div>
             <div className="col-span-2">Klient</div>
             <div className="col-span-2">Usługa</div>
             <div className="col-span-2">Barber</div>
-            <div className="col-span-2 text-right">Akcja</div>
+            <div className="col-span-2">Akcja</div>
           </div>
           {rows.map((booked) => (
             <div
               key={booked.id}
-              className="grid grid-cols-10 gap-2 p-4 border items-center"
+              className="grid grid-cols-10 py-2 px-1 border items-center"
             >
-              <div className="col-span-2">
+              <div className="col-span-2 ">
                 <p>{booked.start}</p>
-                <p>{booked.status}</p>
+                <p className="text-xxs">{booked.status}</p>
               </div>
               <div className="col-span-2">
                 <p> {booked.customerName} </p>
-                <p>{booked.customerPhone}</p>
+                <p className="text-xxs">{booked.customerPhone}</p>
               </div>
-              <div className="col-span-2">{booked.service.name}</div>
+              <div className="col-span-2 text-xxs">{booked.service.name}</div>
               <div className="col-span-2">{booked.barber.name}</div>
               <div className="col-span-2">
                 <button
@@ -129,6 +149,7 @@ export default function AdminPage() {
                     booked.status !== "BOOKED" || cancelMutation.isPending
                   }
                   onClick={() => cancelMutation.mutate(booked.id)}
+                  className="border p-2 rounded-xl"
                 >
                   Anuluj
                 </button>
