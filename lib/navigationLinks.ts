@@ -5,7 +5,7 @@ export type NavLink = {
 
 export const navLinks: NavLink[] = [
   { name: "Strona Główna", url: "/" },
-  { name: "Cennik", url: "/cennik" },
+  { name: "Umów wizytę", url: "/wizyta" },
   { name: "Galeria", url: "/galeria" },
   { name: "Kontakt", url: "/kontakt" },
 ];
