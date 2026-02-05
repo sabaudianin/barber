@@ -2,7 +2,6 @@ import { Hero } from "@/components/hero/Hero";
 import { AboutUs } from "@/components/about/AboutUs";
 import { Cta } from "@/components/cta/Cta";
 import { Team } from "@/components/team/Team";
-import BookingPage from "@/components/booking/page";
 
 export default function Home() {
   return (
@@ -11,8 +10,6 @@ export default function Home() {
       <Cta />
       <AboutUs />
       <Team />
-
-      <BookingPage />
     </section>
   );
 }

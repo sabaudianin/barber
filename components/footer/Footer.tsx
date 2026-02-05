@@ -1,13 +1,12 @@
 import { FaWhatsapp, FaCalendarAlt } from "react-icons/fa";
 import { BsFillTelephoneFill } from "react-icons/bs";
+import Link from "next/link";
 
 export const Footer = () => {
   return (
     <footer className="bg-neutral-950 text-neutral-100">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        {/* GRID: mobile = 1 kolumna, duże = 3 kolumny */}
         <div className="grid gap-10 lg:grid-cols-3 lg:gap-12">
-          {/* Kolumna 1 */}
           <div className="flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
             <p className="font-diplomata text-xl font-bold tracking-widest text-[var(--color-accent)]">
               Barber Shop
@@ -22,7 +21,6 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Kolumna 2 */}
           <div className="flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
             <p className="font-diplomata text-base">Lokalizacja:</p>
             <p className="text-neutral-300">
@@ -35,7 +33,6 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Kolumna 3 */}
           <div className="flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
             <p className="font-diplomata text-base">Pytania:</p>
 
@@ -53,13 +50,13 @@ export const Footer = () => {
               +48 793 386 445
             </a>
 
-            <a
-              href="#"
+            <Link
+              href="/wizyta"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-neutral-100 ring-1 ring-white/10 transition hover:bg-neutral-800 lg:justify-start"
             >
               <FaCalendarAlt className="text-blue-500" />
               Umów wizytę on-Line
-            </a>
+            </Link>
           </div>
         </div>
 
