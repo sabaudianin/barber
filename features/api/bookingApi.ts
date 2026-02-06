@@ -3,8 +3,11 @@ import type {
   Service,
   AvailabilityMonthResponse,
   AvailabilityDayResponse,
+  CreateBookingResponse,
 } from "@/types/types";
+import type { CreateBookingPayload } from "@/lib/schemas/booking";
 
+//1 Barberzy
 export async function fetchBarbers(): Promise<Barber[]> {
   const res = await fetch("/api/barbers");
 
@@ -16,6 +19,7 @@ export async function fetchBarbers(): Promise<Barber[]> {
   return res.json();
 }
 
+//2 Usulgi
 export async function fetchServices(): Promise<Service[]> {
   const res = await fetch("api/services");
 
@@ -26,6 +30,7 @@ export async function fetchServices(): Promise<Service[]> {
   return res.json();
 }
 
+//3 Kropki w miesiacu
 export async function fetchAvailabilityMonth(params: {
   barberId: string;
   serviceId: string;
@@ -46,6 +51,7 @@ export async function fetchAvailabilityMonth(params: {
   return res.json();
 }
 
+//4 Godziny w dniu
 export async function fetchAvailabilityDay(params: {
   barberId: string;
   serviceId: string;
@@ -63,4 +69,31 @@ export async function fetchAvailabilityDay(params: {
     throw new Error(data?.error ?? "Failed to fetch day availibility");
   }
   return res.json();
+}
+
+//5 rezerwacja
+export async function createBooking(
+  payload: CreateBookingPayload,
+): Promise<CreateBookingResponse> {
+  const res = await fetch("/api/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  //celowo const data = await res.json() przed if (!res.ok), bo w POST:przy sukcesie: dostać np. bookingId ,przy błędzie: dostać error i zwykle backend przy POST zwraca JSON i dla ok i dla error.Jeśl inie zwraca JSON, to i tak .catch(() => null) zabezpiecza.
+
+  //const data = await res.json().catch(() => null);
+
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  if (!res.ok) {
+    const msg = data?.error ?? "Booking Failed";
+    throw new Error(msg);
+  }
+  return (data ?? { ok: true }) as CreateBookingResponse;
 }

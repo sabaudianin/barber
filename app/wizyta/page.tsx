@@ -1,39 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { DateTime } from "luxon";
 import { pl } from "react-day-picker/locale";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { CreateBookingPayload } from "@/lib/schemas/booking";
 import { ZONE, toJsDateIso, toMonthString } from "@/lib/time/date";
 import { BookingForm } from "@/components/bookingForm/BookingForm";
-
 import { IoCloseSharp } from "react-icons/io5";
 import { useBarbers } from "@/hooks/useBarbers";
 import { useServices } from "@/hooks/useServices";
 import { useAvailabilityMonth } from "@/hooks/useAvailabilityMonth";
 import { useAvailabilityDay } from "@/hooks/useAvailabilityDay";
-
-type Toast = { type: "success" | "error"; message: string } | null;
+import { useCreateBooking } from "@/hooks/useCreateBooking";
+import { useEsc } from "@/hooks/useEsc";
+import { useToast } from "@/hooks/useToast";
 
 export default function BookingPage() {
-  const queryClient = useQueryClient();
-
   //wybrane barbery i uługi dni przez usera
   const [selectedBarberId, setSelectedBarberId] = useState<string>("");
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
-
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined);
   const [month, setMonth] = useState<Date>(new Date());
 
-  //modal
-  const [isOpen, setIsOpen] = useState(false);
-
   //godzina kliknieta
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-
-  const [toast, setToast] = useState<Toast>(null);
+  //modal
+  const [isOpen, setIsOpen] = useState(false);
 
   //liczymy day w jednym miejscu
   const selectedDayIso = useMemo(
@@ -41,10 +33,29 @@ export default function BookingPage() {
     [selectedDay],
   );
 
+  const calendarLimits = useMemo(() => {
+    const now = DateTime.now().setZone(ZONE);
+
+    const today = now.startOf("day").toJSDate();
+    const startMonth = now.startOf("month").toJSDate();
+    const endMonth = now
+      .startOf("month")
+      .plus({ months: 1 })
+      .startOf("month")
+      .toJSDate();
+    const toDate = now
+      .startOf("month")
+      .plus({ months: 1 })
+      .endOf("month")
+      .toJSDate();
+
+    return { today, startMonth, endMonth, toDate };
+  }, []);
+
+  const { today, startMonth, endMonth, toDate } = calendarLimits;
   //zapytania API
 
   const barbersQuery = useBarbers();
-
   const servicesQuery = useServices();
 
   const barbers = barbersQuery.data ?? [];
@@ -71,64 +82,41 @@ export default function BookingPage() {
     date: selectedDayIso,
   });
 
-  const createBookingMutation = useMutation({
-    mutationFn: async (payload: CreateBookingPayload) => {
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? "Booking failed");
-      return data;
-    },
-    onSuccess: async () => {
-      // odświeżamy kropki
-      await queryClient.invalidateQueries({
-        queryKey: [
-          "availabilityMonth",
-          effectiveBarberId,
-          effectiveServiceId,
-          monthStr,
-        ],
-      });
-
-      // odświeżamy sloty
-      if (selectedDay) {
-        await queryClient.invalidateQueries({
-          queryKey: [
-            "availabilityDay",
-            effectiveBarberId,
-            effectiveServiceId,
-            selectedDayIso,
-          ],
-        });
-      }
-    },
+  const createBookingMutation = useCreateBooking({
+    barberId: effectiveBarberId,
+    serviceId: effectiveServiceId,
+    month: monthStr,
+    date: selectedDayIso,
   });
 
-  const slots = availabilityDayQuery.data?.slots ?? [];
-
   //jesli zminie barbera usługe reset dnia i slotów zeby nie pokazywać starych już nie aktualnych
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsOpen(false);
     setSelectedTime(null);
-  };
+  }, []);
 
-  const onChangeBarber = (id: string) => {
-    setSelectedBarberId(id);
-    setSelectedDay(undefined);
-    closeModal();
-  };
-  const onChangeService = (id: string) => {
-    setSelectedServiceId(id);
-    setSelectedDay(undefined);
-    closeModal();
-  };
+  const onChangeBarber = useCallback(
+    (id: string) => {
+      setSelectedBarberId(id);
+      setSelectedDay(undefined);
+      closeModal();
+    },
+    [closeModal],
+  );
+
+  const onChangeService = useCallback(
+    (id: string) => {
+      setSelectedServiceId(id);
+      setSelectedDay(undefined);
+      closeModal();
+    },
+    [closeModal],
+  );
 
   //funkcja wyswietlająca wolne sloty
-  const renderSlots = () => {
+  const slotsContent = useMemo(() => {
+    const slots = availabilityDayQuery.data?.slots ?? [];
+
     if (!selectedDay) return <p>Wybierz dzień z kalendarza</p>;
     if (availabilityDayQuery.isLoading) return <p>...Ładowanie ...</p>;
     if (availabilityDayQuery.isError) return <p>Błąd ładowania terminów</p>;
@@ -150,36 +138,12 @@ export default function BookingPage() {
         ))}
       </div>
     );
-  };
-  //helpery do blokowania dat
-  const today = useMemo(
-    () => DateTime.now().setZone(ZONE).startOf("day").toJSDate(),
-    [],
-  );
-  const startMonth = useMemo(
-    () => DateTime.now().setZone(ZONE).startOf("month").toJSDate(),
-    [],
-  );
-  const endMonth = useMemo(
-    () =>
-      DateTime.now()
-        .setZone(ZONE)
-        .startOf("month")
-        .plus({ months: 1 })
-        .startOf("month")
-        .toJSDate(),
-    [],
-  );
-  const toDate = useMemo(
-    () =>
-      DateTime.now()
-        .setZone(ZONE)
-        .startOf("month")
-        .plus({ months: 1 })
-        .endOf("month")
-        .toJSDate(),
-    [],
-  );
+  }, [
+    selectedDay,
+    availabilityDayQuery.data, // zależymy od data, nie od slots
+    availabilityDayQuery.isLoading,
+    availabilityDayQuery.isError,
+  ]);
 
   //kropeczka dostępności use memo bo przekazujemy ddalej
   const modifiers = useMemo(() => {
@@ -190,25 +154,8 @@ export default function BookingPage() {
 
   const modifiersClassNames = { available: "day-available" };
 
-  //zamknij modal ESCgir
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        closeModal();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen]);
-
-  //toast
-  const showToast = (t: Toast) => {
-    setToast(t);
-    if (!t) return;
-    window.setTimeout(() => setToast(null), 4000);
-  };
+  useEsc(isOpen, closeModal);
+  const { toast, showToast } = useToast(4000);
 
   return (
     <section className="mx-auto max-w-6xl py-4">
@@ -317,7 +264,7 @@ export default function BookingPage() {
           />
         </div>
 
-        <div className="py-4">{renderSlots()}</div>
+        <div className="py-4">{slotsContent}</div>
       </section>
 
       {toast && (
