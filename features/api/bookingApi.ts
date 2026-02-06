@@ -31,10 +31,10 @@ export async function fetchAvailabilityMonth(params: {
   serviceId: string;
   month: string;
 }): Promise<AvailabilityMonthResponse> {
-  //zamiast recznego encodeUriComponent w url, URLSearchParams zrobi encode i bedzie czysciej
+  //zamiast recznego encodeUriComponent w url, URLSearchParams zrobi encode i bedzie czysciej i jeszce zrobi toString()
   const q = new URLSearchParams({
     barberId: params.barberId,
-    servicesId: params.serviceId,
+    serviceId: params.serviceId,
     month: params.month,
   });
 
@@ -53,7 +53,7 @@ export async function fetchAvailabilityDay(params: {
 }): Promise<AvailabilityDayResponse> {
   const q = new URLSearchParams({
     barberId: params.barberId,
-    servicesId: params.serviceId,
+    serviceId: params.serviceId,
     date: params.date,
   });
 

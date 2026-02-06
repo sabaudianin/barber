@@ -6,15 +6,17 @@ export function useAvailabilityMonth(params: {
   serviceId: string;
   month: string;
 }) {
+  const enabled = Boolean(params.barberId && params.serviceId && params.month);
+
   return useQuery({
     queryKey: [
-      "availibilityMonth",
+      "availabilityMonth",
       params.barberId,
       params.serviceId,
       params.month,
     ],
     queryFn: () => fetchAvailabilityMonth(params),
-    enabled: !!params.barberId && !!params.serviceId && !!params.month,
+    enabled,
     staleTime: 5000,
   });
 }

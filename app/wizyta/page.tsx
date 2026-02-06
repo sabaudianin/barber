@@ -53,8 +53,6 @@ export default function BookingPage() {
   const effectiveBarberId = selectedBarberId || barbers[0]?.id || "";
   const effectiveServiceId = selectedServiceId || services[0]?.id || "";
 
-  //pobieranie msca
-
   const monthStr = toMonthString(month);
 
   const availabilityMonthQuery = useAvailabilityMonth({
@@ -67,7 +65,6 @@ export default function BookingPage() {
     return new Set<string>(availabilityMonthQuery.data?.availableDates ?? []);
   }, [availabilityMonthQuery.data]);
 
-  //pobieranie dnia
   const availabilityDayQuery = useAvailabilityDay({
     barberId: effectiveBarberId,
     serviceId: effectiveServiceId,
