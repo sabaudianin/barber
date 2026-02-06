@@ -8,3 +8,6 @@ export type Service = {
 };
 
 export type Toast = { type: "success" | "error"; message: string } | null;
+
+export type AvailabilityMonthResponse = { availableDates: string[] };
+export type AvailabilityDayResponse = { slots: string[] };

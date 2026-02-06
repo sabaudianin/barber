@@ -12,15 +12,8 @@ import { BookingForm } from "@/components/bookingForm/BookingForm";
 import { IoCloseSharp } from "react-icons/io5";
 import { useBarbers } from "@/hooks/useBarbers";
 import { useServices } from "@/hooks/useServices";
-
-type Barber = { id: string; name: string };
-
-type Service = {
-  id: string;
-  name: string;
-  durationMinutes: number;
-  price: number | null;
-};
+import { useAvailabilityMonth } from "@/hooks/useAvailabilityMonth";
+import { useAvailabilityDay } from "@/hooks/useAvailabilityDay";
 
 type Toast = { type: "success" | "error"; message: string } | null;
 
@@ -60,57 +53,24 @@ export default function BookingPage() {
   const effectiveBarberId = selectedBarberId || barbers[0]?.id || "";
   const effectiveServiceId = selectedServiceId || services[0]?.id || "";
 
-  //pobieranie msca
-
   const monthStr = toMonthString(month);
 
-  const availabilityMonthQuery = useQuery({
-    queryKey: [
-      "availabilityMonth",
-      effectiveBarberId,
-      effectiveServiceId,
-      monthStr,
-    ],
-    enabled: !!effectiveBarberId && !!effectiveServiceId,
-    queryFn: async () => {
-      const url = `/api/availability/month?barberId=${encodeURIComponent(
-        effectiveBarberId,
-      )}&serviceId=${encodeURIComponent(effectiveServiceId)}&month=${monthStr}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error("Failed to fetch month availability");
-      }
-      return (await res.json()) as { availableDates: string[] };
-    },
+  const availabilityMonthQuery = useAvailabilityMonth({
+    barberId: effectiveBarberId,
+    serviceId: effectiveServiceId,
+    month: monthStr,
   });
 
   const availableDatesSet = useMemo(() => {
     return new Set<string>(availabilityMonthQuery.data?.availableDates ?? []);
   }, [availabilityMonthQuery.data]);
 
-  //pobieranie dnia
-  const availabilityDayQuery = useQuery({
-    queryKey: [
-      "availabilityDay",
-      effectiveBarberId,
-      effectiveServiceId,
-      selectedDayIso,
-    ],
-    enabled: !!effectiveBarberId && !!effectiveServiceId && !!selectedDayIso,
-    queryFn: async () => {
-      if (!effectiveBarberId || !effectiveServiceId || !selectedDayIso) {
-        throw new Error("Missing params for availabilityDayQuery");
-      }
-
-      const url = `/api/availability?barberId=${encodeURIComponent(effectiveBarberId)}&serviceId=${encodeURIComponent(effectiveServiceId)}&date=${selectedDayIso}`;
-
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error("Failed to fetch day availability");
-      }
-      return (await res.json()) as { slots: string[] };
-    },
+  const availabilityDayQuery = useAvailabilityDay({
+    barberId: effectiveBarberId,
+    serviceId: effectiveServiceId,
+    date: selectedDayIso,
   });
+
   const createBookingMutation = useMutation({
     mutationFn: async (payload: CreateBookingPayload) => {
       const res = await fetch("/api/bookings", {
