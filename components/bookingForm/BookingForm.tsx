@@ -7,10 +7,13 @@ import {
   bookingSchema,
   CreateBookingPayload,
 } from "@/lib/schemas/booking";
+import { CreateBookingResponse } from "@/types/types";
 
 type BookingFormProps = {
   createBookingMutation: {
-    mutateAsync: (payload: CreateBookingPayload) => Promise<void>;
+    mutateAsync: (
+      payload: CreateBookingPayload,
+    ) => Promise<CreateBookingResponse>;
     isPending: boolean;
     isError: boolean;
     error: unknown;

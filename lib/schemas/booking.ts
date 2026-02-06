@@ -5,8 +5,8 @@ export const createBookingSchema = z.object({
   serviceId: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format daty: YYYY-MM-DD"),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Format czasu: HH:mm"),
-  customerName: z.string().trim().min(2, "Imię min. 2 znaki").max(60),
-  customerPhone: z.string().trim().max(30).or(z.literal("")),
+  customerName: z.string().trim().min(2, "Imię min. 2 znaki").max(20),
+  customerPhone: z.string().trim().max(12).or(z.literal("")),
 });
 
 export type CreateBookingPayload = z.infer<typeof createBookingSchema>;
