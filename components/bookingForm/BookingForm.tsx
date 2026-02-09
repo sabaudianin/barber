@@ -82,6 +82,11 @@ export const BookingForm = ({
           className="w-full border rounded-lg p-2"
           {...form.register("customerPhone")}
         />
+        {form.formState.errors.customerPhone && (
+          <p className="text-sm text-red-600">
+            {form.formState.errors.customerPhone.message}
+          </p>
+        )}
       </div>
 
       {createBookingMutation.isError && (

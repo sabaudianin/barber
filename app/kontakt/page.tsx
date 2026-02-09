@@ -8,7 +8,7 @@ export default function Kontakt() {
           <a
             href="#"
             aria-label="Facebook"
-            className="hover:scale-110 transition-transform duration-200"
+            className="hover:scale-110 transition-transform duration-200 "
           >
             <FaFacebookF />
           </a>
@@ -16,7 +16,7 @@ export default function Kontakt() {
           <a
             href="#"
             aria-label="Instagram"
-            className="hover:scale-110 transition-transform duration-200"
+            className="hover:scale-110 transition-transform duration-200 "
           >
             <FaInstagram />
           </a>
