@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Barber Booking System
 
-## Getting Started
+Production-ready full-stack appointment booking system for a barbershop.
 
-First, run the development server:
+The application allows customers to book appointments online and administrators to manage availability, breaks, and working hours.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+This project demonstrates real-world full-stack architecture including frontend, backend API, database design, scheduling logic, and cloud deployment.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Live Demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**App:** https://barber-gamma-snowy.vercel.app/
+**Admin:** `/admin` (Basic Auth protected)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Customer
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- choose barber
+- choose service (duration-based)
+- calendar with visual availability indicators
+- real-time free time slots
+- booking form with validation
+- automatic conflict prevention
 
-## Deploy on Vercel
+### Admin
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- protected admin panel (Basic Auth)
+- manage barber time-offs (breaks / vacations)
+- availability updates instantly
+- prevents bookings during blocked hours
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Tech Stack
+
+### Frontend
+
+- Next.js (App Router)
+- React
+- TypeScript
+- TailwindCSS
+- React Day Picker
+- TanStack Query (server state management)
+- React Hook Form + Zod (forms & validation)
+
+### Backend
+
+- Next.js API Routes
+- Prisma ORM
+- PostgreSQL
+
+### Infrastructure
+
+- Docker Compose (local development)
+- Neon Postgres (serverless production database)
+- Vercel (hosting & deployment)
+- Prisma migrations + seed
+
+## 🏗 Architecture
+
+-Client (Next.js)
+
+-API Routes
+
+-Prisma ORM
+
+-PostgreSQL (Neon
